@@ -2,8 +2,7 @@
 using UnityEngine;
 
 public class CombatGrid : MonoBehaviour {
-
-	private Vector3 startingPosition = new Vector3(-8, -1, 0);
+	
 	private int rows = 5;
 	private int cols = 16;
 
@@ -12,9 +11,11 @@ public class CombatGrid : MonoBehaviour {
 
 	public GameObject gridTile;
 	
-	public void SetupCombatGrid() {
+	public void SetupCombatGrid(List<Character> clan) {
 		initializeCombatGrid();
 		initializeGridPositions();
+
+		populateClan(clan);
 	}
 
 	private void initializeGridPositions() {
@@ -36,6 +37,21 @@ public class CombatGrid : MonoBehaviour {
 
 				instance.transform.SetParent(combatGrid);
 			}
+		}
+	}
+
+	private void populateClan(List<Character> clan) {
+		int rowPos = 0;
+		int colPos = 0;
+
+		foreach (Character character in clan) {
+			if (rowPos == rows) {
+				rowPos = 0;
+				colPos++;
+			}
+
+			Instantiate(clan[0], new Vector3(colPos, rowPos, 0f), Quaternion.identity);
+			rowPos++;
 		}
 	}
 }

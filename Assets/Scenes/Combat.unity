@@ -205,6 +205,7 @@ GameObject:
   - component: {fileID: 1444882167}
   - component: {fileID: 1444882168}
   - component: {fileID: 1444882169}
+  - component: {fileID: 1444882170}
   m_Layer: 0
   m_Name: CombatManager
   m_TagString: Untagged
@@ -250,5 +251,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fc401df6833ef64389b7e3ed0b32742, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridTile: {fileID: 6851576302115171471, guid: 84a4702b5a8856b4483c59eb4171c931,
-    type: 3}
+  gridTile: {fileID: 59328777660256581, guid: 0f6d2c116a0e5654e9cf410c97b3d2df, type: 3}
+--- !u!114 &1444882170
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1444882166}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f01b50374abad4a4d9bafddc7571395f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  clan:
+  - {fileID: 2563864010445441957, guid: a15b186c3a95aa6439ada833cc03e892, type: 3}

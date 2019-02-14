@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Friendly
   - Ground
+  - Combat Grid Tile
   layers:
   - Default
   - TransparentFX

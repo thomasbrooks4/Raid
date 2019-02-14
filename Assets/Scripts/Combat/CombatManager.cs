@@ -2,9 +2,11 @@
 
 public class CombatManager : MonoBehaviour {
 
+	private GameManager gameManagerScript;
 	private CombatGrid combatGridScript;
 	
 	void Awake() {
+		gameManagerScript = GetComponent<GameManager>();
 		combatGridScript = GetComponent<CombatGrid>();
 
 		initializeCombatScene();
@@ -16,6 +18,6 @@ public class CombatManager : MonoBehaviour {
 	}
 
 	private void initializeCombatScene() {
-		combatGridScript.SetupCombatGrid();
+		combatGridScript.SetupCombatGrid(gameManagerScript.Clan);
 	}
 }

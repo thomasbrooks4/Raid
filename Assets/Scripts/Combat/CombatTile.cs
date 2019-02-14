@@ -1,4 +1,9 @@
-﻿public class CombatTile {
+﻿using UnityEngine;
+
+public class CombatTile : MonoBehaviour {
+
+	private SpriteRenderer spriteRenderer;
+	private Color startColor;
 
 	private int x;
 	private int y;
@@ -21,4 +26,17 @@
 	public CombatTile Parent { get => parent; set => parent = value; }
 	
 	public int F { get => g + h; }
+
+	void Start() {
+		spriteRenderer = this.GetComponent<SpriteRenderer>();
+		startColor = spriteRenderer.material.color;
+	}
+
+	void OnMouseOver() {
+		spriteRenderer.material.color = Color.gray;
+	}
+
+	void OnMouseExit() {
+		spriteRenderer.material.color = startColor;
+	}
 }
