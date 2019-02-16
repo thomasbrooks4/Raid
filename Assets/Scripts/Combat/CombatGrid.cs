@@ -2,55 +2,55 @@
 using UnityEngine;
 
 public class CombatGrid : MonoBehaviour {
-	
-	private int rows = 5;
-	private int cols = 16;
 
-	private Transform combatGrid;
-	private List<Vector3> gridPositions = new List<Vector3>();
+	private Transform gridTransform;
+	public GameObject gridTilePrefab;
 
-	public GameObject gridTile;
-	
-	public void SetupCombatGrid(List<Character> clan) {
-		initializeCombatGrid();
-		initializeGridPositions();
+	private int cols;
+	private int rows;
+	private GridTile[,] gridTiles;
 
-		populateClan(clan);
+	public GridTile[,] GridTiles { get => gridTiles; }
+
+	public void Initialize(int cols, int rows, List<GameObject> clan) {
+		this.cols = cols;
+		this.rows = rows;
+		gridTiles = new GridTile[cols, rows];
+
+		generateGrid();
+		populateFriendlyClan(clan);
 	}
 
-	private void initializeGridPositions() {
-		gridPositions.Clear();
+	private void generateGrid() {
+		gridTransform = new GameObject("Combat Grid").transform;
 
 		for (int x = 0; x < cols; x++) {
 			for (int y = 0; y < rows; y++) {
-				gridPositions.Add(new Vector3(x, y, 0f));
+				GameObject tile = Instantiate(gridTilePrefab, new Vector3(x, y, 0f), Quaternion.identity) as GameObject;
+
+				tile.transform.SetParent(gridTransform);
+
+				gridTiles[x, y] = tile.GetComponent<GridTile>();
+				gridTiles[x, y].Initialize(new Vector2Int(x, y), this);
 			}
 		}
 	}
 
-	private void initializeCombatGrid() {
-		combatGrid = new GameObject("Combat Grid").transform;
-
-		for (int x = 0; x < cols; x++) {
-			for (int y = 0; y < rows; y++) {
-				GameObject instance = Instantiate(gridTile, new Vector3(x, y, 0f), Quaternion.identity) as GameObject;
-
-				instance.transform.SetParent(combatGrid);
-			}
-		}
-	}
-
-	private void populateClan(List<Character> clan) {
-		int rowPos = 0;
+	private void populateFriendlyClan(List<GameObject> clan) {
 		int colPos = 0;
+		int rowPos = 0;
 
-		foreach (Character character in clan) {
+		foreach (GameObject characterPrefab in clan) {
 			if (rowPos == rows) {
 				rowPos = 0;
 				colPos++;
 			}
 
-			Instantiate(clan[0], new Vector3(colPos, rowPos, 0f), Quaternion.identity);
+			GameObject character = Instantiate(characterPrefab, new Vector3(colPos, rowPos, 0f), Quaternion.identity) as GameObject;
+
+			gridTiles[colPos, rowPos].Character = character.GetComponent<Character>();
+			gridTiles[colPos, rowPos].Character.Initialize();
+
 			rowPos++;
 		}
 	}

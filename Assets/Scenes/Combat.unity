@@ -239,6 +239,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7c8a95d35a501443a73b9761fd4e5fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gridCols: 16
+  gridRows: 5
+  selectedCharacter: {fileID: 0}
 --- !u!114 &1444882169
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -251,7 +254,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fc401df6833ef64389b7e3ed0b32742, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridTile: {fileID: 59328777660256581, guid: 0f6d2c116a0e5654e9cf410c97b3d2df, type: 3}
+  gridTilePrefab: {fileID: 59328777660256581, guid: 0f6d2c116a0e5654e9cf410c97b3d2df,
+    type: 3}
 --- !u!114 &1444882170
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -264,5 +268,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f01b50374abad4a4d9bafddc7571395f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  clan:
-  - {fileID: 2563864010445441957, guid: a15b186c3a95aa6439ada833cc03e892, type: 3}
+  friendlyClan:
+  - {fileID: 2563864010445441967, guid: a15b186c3a95aa6439ada833cc03e892, type: 3}

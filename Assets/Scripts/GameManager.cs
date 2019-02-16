@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour {
-	public List<Character> clan = new List<Character>();
+	public List<GameObject> friendlyClan = new List<GameObject>();
 
-	public List<Character> Clan { get => clan; }
+	public List<GameObject> FriendlyClan { get => friendlyClan; }
 
-	public void AddToClan(Character character) {
-		clan.Add(character);
+	public void AddToFriendlyClan(GameObject character) {
+		friendlyClan.Add(character);
 	}
 
-	public void RemoveFromClan(Character character) {
-		clan.Remove(character);
+	public void RemoveFromFriendlyClan(GameObject character) {
+		friendlyClan.Remove(character);
 	}
 }
