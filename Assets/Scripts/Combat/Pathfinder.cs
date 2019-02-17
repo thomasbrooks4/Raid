@@ -36,7 +36,7 @@ public class Pathfinder : MonoBehaviour {
 			}
 
 			foreach (GridTile surroundingTile in surroundingTiles) {
-				if (searchedTiles.Contains(surroundingTile)) {
+				if (surroundingTile.Character != null || searchedTiles.Contains(surroundingTile)) {
 					continue;
 				}
 

@@ -33,31 +33,37 @@ public class CombatManager : MonoBehaviour {
 
 		if (Input.GetMouseButtonDown(LEFT_MOUSE_BUTTON)) {
 			Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
-			GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
 
-			if (tile.Character != null) {
-				if (selectedCharacter != null)
-					selectedCharacter.IsSelected = false;
-				
-				selectedCharacter = tile.Character;
-				tile.Character.IsSelected = true;
-				combatGrid.CharacterSelected = true;
-			}
-			else {
-				if (selectedCharacter != null)
-					selectedCharacter.IsSelected = false;
+			if (0 <= mousePos.x && mousePos.x <= (combatGrid.cols - 1) && 0 <= mousePos.y && mousePos.y <= (combatGrid.rows - 1)) {
+				GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
 
-				selectedCharacter = null;
-				combatGrid.CharacterSelected = false;
+				if (tile.Character != null) {
+					if (selectedCharacter != null)
+						selectedCharacter.IsSelected = false;
+
+					selectedCharacter = tile.Character;
+					tile.Character.IsSelected = true;
+					combatGrid.CharacterSelected = true;
+				}
+				else {
+					if (selectedCharacter != null)
+						selectedCharacter.IsSelected = false;
+
+					selectedCharacter = null;
+					combatGrid.CharacterSelected = false;
+				}
 			}
 		}
 
 		if (Input.GetMouseButtonDown(RIGHT_MOUSE_BUTTON)) {
 			if (selectedCharacter != null) {
 				Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
-				GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
 
-				selectedCharacter.SetTargetTile(tile);
+				if (0 <= mousePos.x && mousePos.x <= (combatGrid.cols - 1) && 0 <= mousePos.y && mousePos.y <= (combatGrid.rows - 1)) {
+					GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
+
+					selectedCharacter.SetTargetTile(tile);
+				}
 			}
 		}
 	}

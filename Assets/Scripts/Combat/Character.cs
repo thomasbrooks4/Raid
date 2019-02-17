@@ -108,7 +108,7 @@ public class Character : MonoBehaviour {
 	private IEnumerator smoothMovement(GridTile targetTile) {
 		isMoving = true;
 
-		float sqrRemainingDistance = (gridTile.GridPos - targetTile.GridPos).sqrMagnitude;
+		float sqrRemainingDistance = (new Vector2(transform.position.x, transform.position.y) - targetTile.GridPos).sqrMagnitude;
 		float inverseMoveTime = (1f / BASE_MOVE_SPEED) * speed;
 
 		while (sqrRemainingDistance > float.Epsilon) {
