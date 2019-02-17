@@ -38,6 +38,8 @@ public class GridTile : MonoBehaviour {
 	void OnMouseOver() {
 		if (character == null && grid.CharacterSelected)
 			spriteRenderer.material.color = Color.gray;
+		else
+			spriteRenderer.material.color = startColor;
 	}
 
 	void OnMouseExit() {

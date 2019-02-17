@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Pathfinder : MonoBehaviour {
@@ -19,9 +20,10 @@ public class Pathfinder : MonoBehaviour {
 
 		startTile.G = 0;
 		startTile.H = getH(startTile, endTile);
+		openTiles.Add(startTile);
 
 		while(openTiles.Count > 0) {
-			GridTile currentTile = getLowestF();
+			GridTile currentTile = getLowestF(openTiles);
 			openTiles.Remove(currentTile);
 			searchedTiles.Add(currentTile);
 
@@ -58,17 +60,14 @@ public class Pathfinder : MonoBehaviour {
 		return Math.Abs(endTile.GridPos.x - startTile.GridPos.x) + Math.Abs(endTile.GridPos.y - startTile.GridPos.y);
 	}
 
-	private GridTile getLowestF() {
-		GridTile minTile = grid.GridTiles[0,0];
+	private GridTile getLowestF(List<GridTile> gridTiles) {
+		GridTile minTile = gridTiles.First();
 
-		for (int x = 0; x < grid.cols; x++) {
-			for (int y = 0; y < grid.rows; y++) {
-				if (grid.GridTiles[x, y].F < minTile.F) {
-					minTile = grid.GridTiles[x, y];
-				}
+		foreach (GridTile tile in gridTiles) {
+			if (tile.F < minTile.F) {
+				minTile = tile;
 			}
 		}
-			
 
 		return minTile;
 	}

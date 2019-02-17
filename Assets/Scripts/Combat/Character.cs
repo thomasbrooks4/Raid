@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Character : MonoBehaviour {
@@ -11,10 +12,12 @@ public class Character : MonoBehaviour {
 	private BoxCollider2D boxCollider;
 	private Rigidbody2D rb2D;
 	private Pathfinder pathfinder;
+	[SerializeField]
 	private List<GridTile> path = new List<GridTile>();
 	private GridTile gridTile;
 
 	private string characterName;
+	[SerializeField]
 	private bool isMoving;
 	[SerializeField]
 	private bool isSelected;
@@ -65,19 +68,8 @@ public class Character : MonoBehaviour {
 			spriteRenderer.material.color = startColor;
 		}
 
-		// if (!path.IsEmpty())
-		// MoveOnPath()
-
-		int horizontal = 0;
-		int vertical = 0;
-
-		horizontal = (int)(Input.GetAxisRaw("Horizontal"));
-		vertical = (int)(Input.GetAxisRaw("Vertical"));
-		
-		if (horizontal != 0 || vertical != 0) {
-			StartCoroutine(actionCooldown(cooldown));
-			move(horizontal, vertical);
-		}
+		if (path.Any())
+			moveOnPath();
 	}
 
 	public void SetTargetTile(GridTile targetTile) {
@@ -92,43 +84,44 @@ public class Character : MonoBehaviour {
 
 	private void moveOnPath() {
 		if (!isMoving) {
-			// update path
-			bool moved; // = Move(path.First());
-			// Remove tile from path
+			GridTile nextTile = path.First();
+			path.Remove(path.First());
+
+			StartCoroutine(actionCooldown(cooldown));
+			move(nextTile);
 		}
 	}
 
-	private bool move(int xDir, int yDir) {
-		Vector2 startTile = transform.position;
-		Vector2 endTile = startTile + new Vector2(xDir, yDir);
-
+	private bool move(GridTile targetTile) {
 		boxCollider.enabled = false;
-		RaycastHit2D hit = Physics2D.Linecast(startTile, endTile, LayerMask.GetMask("Blocking Layer"));
+		RaycastHit2D hit = Physics2D.Linecast(gridTile.GridPos, targetTile.GridPos, LayerMask.GetMask("Blocking Layer"));
 		boxCollider.enabled = true;
 
 		if (hit.transform == null) {
-			StartCoroutine(smoothMovement(endTile));
+			StartCoroutine(smoothMovement(targetTile));
 			return true;
 		}
 
 		return false;
 	}
 
-	private IEnumerator smoothMovement(Vector3 endPos) {
+	private IEnumerator smoothMovement(GridTile targetTile) {
 		isMoving = true;
 
-		float sqrRemainingDistance = (transform.position - endPos).sqrMagnitude;
+		float sqrRemainingDistance = (gridTile.GridPos - targetTile.GridPos).sqrMagnitude;
 		float inverseMoveTime = (1f / BASE_MOVE_SPEED) * speed;
 
 		while (sqrRemainingDistance > float.Epsilon) {
-			Vector3 newPosition = Vector3.MoveTowards(transform.position, endPos, inverseMoveTime * Time.deltaTime);
+			Vector2 newPosition = Vector2.MoveTowards(transform.position, targetTile.GridPos, inverseMoveTime * Time.deltaTime);
 			transform.position = newPosition;
-			sqrRemainingDistance = (transform.position - endPos).sqrMagnitude;
-
+			sqrRemainingDistance = (new Vector2(transform.position.x, transform.position.y) - targetTile.GridPos).sqrMagnitude;
 			yield return null;
 		}
 
 		isMoving = false;
+		gridTile.Character = null;
+		gridTile = targetTile;
+		gridTile.Character = this;
 	}
 
 	private IEnumerator actionCooldown(float cooldown) {
@@ -147,6 +140,7 @@ public class Character : MonoBehaviour {
 	}
 
 	void OnMouseExit() {
-		spriteRenderer.material.color = startColor;
+		if (!IsSelected)
+			spriteRenderer.material.color = startColor;
 	}
 }

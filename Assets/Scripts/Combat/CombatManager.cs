@@ -39,9 +39,9 @@ public class CombatManager : MonoBehaviour {
 				if (selectedCharacter != null)
 					selectedCharacter.IsSelected = false;
 				
+				selectedCharacter = tile.Character;
 				tile.Character.IsSelected = true;
 				combatGrid.CharacterSelected = true;
-				selectedCharacter = tile.Character;
 			}
 			else {
 				if (selectedCharacter != null)
