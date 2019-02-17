@@ -10,8 +10,9 @@ public class Character : MonoBehaviour {
 	private SpriteRenderer spriteRenderer;
 	private BoxCollider2D boxCollider;
 	private Rigidbody2D rb2D;
-	
+	private Pathfinder pathfinder;
 	private List<GridTile> path = new List<GridTile>();
+	private GridTile gridTile;
 
 	private string characterName;
 	private bool isMoving;
@@ -24,9 +25,12 @@ public class Character : MonoBehaviour {
 	[SerializeField]
 	private float cooldown;
 
+	public GridTile GridTile { get => gridTile; set => gridTile = value; }
+	public List<GridTile> Path { get => path; set => path = value; }
 	public bool IsSelected { get => isSelected; set => isSelected = value; }
 
-	public void Initialize() {
+	public void Initialize(GridTile gridTile) {
+		this.gridTile = gridTile;
 		isSelected = false;
 	}
 
@@ -34,6 +38,7 @@ public class Character : MonoBehaviour {
 		spriteRenderer = GetComponent<SpriteRenderer>();
 		boxCollider = GetComponent<BoxCollider2D>();
 		rb2D = GetComponent<Rigidbody2D>();
+		pathfinder = GetComponent<Pathfinder>();
 
 		startColor = spriteRenderer.material.color;
 	}
@@ -71,11 +76,21 @@ public class Character : MonoBehaviour {
 		
 		if (horizontal != 0 || vertical != 0) {
 			StartCoroutine(actionCooldown(cooldown));
-			Move(horizontal, vertical);
+			move(horizontal, vertical);
 		}
 	}
 
-	private void MoveOnPath() {
+	public void SetTargetTile(GridTile targetTile) {
+		if (targetTile.Character != null) {
+			// Move and attack
+		}
+		else {
+			// Move
+			path = pathfinder.findPath(gridTile, targetTile);
+		}
+	}
+
+	private void moveOnPath() {
 		if (!isMoving) {
 			// update path
 			bool moved; // = Move(path.First());
@@ -83,7 +98,7 @@ public class Character : MonoBehaviour {
 		}
 	}
 
-	private bool Move(int xDir, int yDir) {
+	private bool move(int xDir, int yDir) {
 		Vector2 startTile = transform.position;
 		Vector2 endTile = startTile + new Vector2(xDir, yDir);
 
@@ -92,14 +107,14 @@ public class Character : MonoBehaviour {
 		boxCollider.enabled = true;
 
 		if (hit.transform == null) {
-			StartCoroutine(SmoothMovement(endTile));
+			StartCoroutine(smoothMovement(endTile));
 			return true;
 		}
 
 		return false;
 	}
 
-	private IEnumerator SmoothMovement(Vector3 endPos) {
+	private IEnumerator smoothMovement(Vector3 endPos) {
 		isMoving = true;
 
 		float sqrRemainingDistance = (transform.position - endPos).sqrMagnitude;

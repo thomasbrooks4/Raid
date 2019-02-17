@@ -9,9 +9,6 @@ public class CombatManager : MonoBehaviour {
 	private GameManager gameManager;
 	private CombatGrid combatGrid;
 
-	public int gridCols;
-	public int gridRows;
-
 	[SerializeField]
 	private Character selectedCharacter;
 	private bool isPaused;
@@ -43,6 +40,7 @@ public class CombatManager : MonoBehaviour {
 					selectedCharacter.IsSelected = false;
 				
 				tile.Character.IsSelected = true;
+				combatGrid.CharacterSelected = true;
 				selectedCharacter = tile.Character;
 			}
 			else {
@@ -50,18 +48,22 @@ public class CombatManager : MonoBehaviour {
 					selectedCharacter.IsSelected = false;
 
 				selectedCharacter = null;
+				combatGrid.CharacterSelected = false;
 			}
 		}
 
 		if (Input.GetMouseButtonDown(RIGHT_MOUSE_BUTTON)) {
-			Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+			if (selectedCharacter != null) {
+				Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+				GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
 
-			GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
+				selectedCharacter.SetTargetTile(tile);
+			}
 		}
 	}
 
 	private void initializeCombatScene() {
-		combatGrid.Initialize(gridCols, gridRows, gameManager.FriendlyClan);
+		combatGrid.Initialize(gameManager.FriendlyClan);
 
 		selectedCharacter = null;
 		isPaused = false;
