@@ -5,6 +5,7 @@ public class CombatGrid : MonoBehaviour {
 
 	private Transform gridTransform;
 	public GameObject gridTilePrefab;
+	public GameObject warriorPrefab;
 	
 	public int cols;
 	public int rows;
@@ -14,12 +15,12 @@ public class CombatGrid : MonoBehaviour {
 	public GridTile[,] GridTiles { get => gridTiles; }
 	public bool CharacterSelected { get => characterSelected; set => characterSelected = value; }
 
-	public void Initialize(List<GameObject> clan) {
+	public void Initialize(SaveData playerSave) {
 		gridTiles = new GridTile[cols, rows];
 		characterSelected = false;
 
 		generateGrid();
-		populateFriendlyClan(clan);
+		populatePlayerClan(playerSave);
 	}
 
 	public List<GridTile> getSurroundingTiles(GridTile tile) {
@@ -49,6 +50,7 @@ public class CombatGrid : MonoBehaviour {
 				GameObject tile = Instantiate(gridTilePrefab, new Vector3(x, y, 0f), Quaternion.identity) as GameObject;
 
 				tile.transform.SetParent(gridTransform);
+				tile.name = "(" + x + ", " + y + ") Grid Tile";
 
 				gridTiles[x, y] = tile.GetComponent<GridTile>();
 				gridTiles[x, y].Initialize(new Vector2Int(x, y), this);
@@ -56,22 +58,29 @@ public class CombatGrid : MonoBehaviour {
 		}
 	}
 
-	private void populateFriendlyClan(List<GameObject> clan) {
-		int colPos = 0;
-		int rowPos = 0;
+	private void populatePlayerClan(SaveData playerSave) {
+		int xPos = 0;
+		for (int i = 0; i < playerSave.characterAmount; i++) {
+			GameObject characterObject;
+			// if (characterData.CharacterClass.Equals(Class.WARRIOR)) use once we add more classes
+			if (playerSave.characterPositions[i] != null) {
+				characterObject = Instantiate(warriorPrefab, new Vector3(playerSave.characterPositions[i][0], 
+					playerSave.characterPositions[i][1], 0f), Quaternion.identity) as GameObject;
 
-		foreach (GameObject characterPrefab in clan) {
-			if (rowPos == rows) {
-				rowPos = 0;
-				colPos++;
+
+				Character character = characterObject.GetComponent<Character>();
+				character.GridTile = gridTiles[playerSave.characterPositions[i][0], playerSave.characterPositions[i][1]];
+
+				gridTiles[playerSave.characterPositions[i][0], playerSave.characterPositions[i][1]].Character = character;
 			}
+			else {
+				characterObject = Instantiate(warriorPrefab, new Vector3(xPos, i, 0f), Quaternion.identity) as GameObject;
 
-			GameObject character = Instantiate(characterPrefab, new Vector3(colPos, rowPos, 0f), Quaternion.identity) as GameObject;
-
-			gridTiles[colPos, rowPos].Character = character.GetComponent<Character>();
-			gridTiles[colPos, rowPos].Character.Initialize(gridTiles[colPos, rowPos]);
-
-			rowPos++;
+				Character character = characterObject.GetComponent<Character>();
+				character.GridTile = gridTiles[xPos, i];
+				character.CharacterName = playerSave.characterNames[i];
+				gridTiles[xPos, i].Character = character;
+			}
 		}
 	}
 }

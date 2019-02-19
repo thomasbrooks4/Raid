@@ -17,69 +17,68 @@ public class Character : MonoBehaviour {
 	private GridTile gridTile;
 
 	private string characterName;
+	private CharacterClass characterClass;
 	[SerializeField]
 	private bool isMoving;
 	[SerializeField]
 	private bool isSelected;
 	private bool onCooldown;
+	private bool lowStance;
 
-	[SerializeField]
-	private float speed;
-	[SerializeField]
-	private float cooldown;
+	protected int maxHealth;
+	protected int health;
+	protected float speed;
+	protected float cooldown;
 
 	public GridTile GridTile { get => gridTile; set => gridTile = value; }
 	public List<GridTile> Path { get => path; set => path = value; }
+
+	public string CharacterName { get => characterName; set => characterName = value; }
+	public CharacterClass CharacterClass { get => characterClass; set => characterClass = value; }
 	public bool IsSelected { get => isSelected; set => isSelected = value; }
 
-	public void Initialize(GridTile gridTile) {
-		this.gridTile = gridTile;
-		isSelected = false;
-	}
-
-	void Start() {
+	public virtual void Start() {
 		spriteRenderer = GetComponent<SpriteRenderer>();
 		boxCollider = GetComponent<BoxCollider2D>();
 		rb2D = GetComponent<Rigidbody2D>();
 		pathfinder = GetComponent<Pathfinder>();
 
 		startColor = spriteRenderer.material.color;
+
+		isSelected = false;
+		lowStance = true;
 	}
-	
-	void Update() {
+
+	public virtual void Update() {
 		if (isMoving || onCooldown)
 			return;
 
-		if (isSelected) {
+		if (isSelected)
 			spriteRenderer.material.color = Color.yellow;
-
-			// Move to tile
-			// Get tile selected
-			// Check for character or empty
-			// if (character)
-			// get path
-			// set target character
-			// begin movement
-			// else
-			// get path
-			// begin movement
-		}
-		else {
+		else
 			spriteRenderer.material.color = startColor;
-		}
 
 		if (path.Any())
 			moveOnPath();
 	}
 
+	void OnMouseOver() {
+		spriteRenderer.material.color = Color.yellow;
+	}
+
+	void OnMouseExit() {
+		if (!IsSelected)
+			spriteRenderer.material.color = startColor;
+	}
+
 	public void SetTargetTile(GridTile targetTile) {
-		if (targetTile.Character != null) {
-			// Move and attack
-		}
-		else {
-			// Move
+		// Move
+		if (targetTile.Character == null)
 			path = pathfinder.findPath(gridTile, targetTile);
-		}
+	}
+
+	public void changeStance() {
+		lowStance = !lowStance;
 	}
 
 	private void moveOnPath() {
@@ -133,14 +132,5 @@ public class Character : MonoBehaviour {
 		}
 
 		onCooldown = false;
-	}
-
-	void OnMouseOver() {
-		spriteRenderer.material.color = Color.yellow;
-	}
-
-	void OnMouseExit() {
-		if (!IsSelected)
-			spriteRenderer.material.color = startColor;
 	}
 }

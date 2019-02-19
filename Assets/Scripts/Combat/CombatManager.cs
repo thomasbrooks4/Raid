@@ -1,20 +1,19 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 public class CombatManager : MonoBehaviour {
-
-	private static string SPACE_BAR = "space";
+	
 	private static int LEFT_MOUSE_BUTTON = 0;
 	private static int RIGHT_MOUSE_BUTTON = 1;
-
-	private GameManager gameManager;
+	
 	private CombatGrid combatGrid;
 
 	[SerializeField]
-	private Character selectedCharacter;
+	private List<Character> selectedCharacters = new List<Character>();
 	private bool isPaused;
 
-	void Awake() {
-		gameManager = GetComponent<GameManager>();
+	void Start() {
 		combatGrid = GetComponent<CombatGrid>();
 
 		initializeCombatScene();
@@ -22,7 +21,7 @@ public class CombatManager : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update() {
-		if (Input.GetKeyDown(SPACE_BAR)) {
+		if (Input.GetKeyDown(KeyCode.Space)) {
 			isPaused = !isPaused;
 
 			if (isPaused)
@@ -31,6 +30,7 @@ public class CombatManager : MonoBehaviour {
 				Time.timeScale = 1f;
 		}
 
+		// Selection
 		if (Input.GetMouseButtonDown(LEFT_MOUSE_BUTTON)) {
 			Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
 
@@ -38,40 +38,47 @@ public class CombatManager : MonoBehaviour {
 				GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
 
 				if (tile.Character != null) {
-					if (selectedCharacter != null)
-						selectedCharacter.IsSelected = false;
+					if (!Input.GetKeyDown(KeyCode.LeftControl))
+						clearSelectedCharacters();
 
-					selectedCharacter = tile.Character;
+					selectedCharacters.Add(tile.Character);
 					tile.Character.IsSelected = true;
 					combatGrid.CharacterSelected = true;
 				}
 				else {
-					if (selectedCharacter != null)
-						selectedCharacter.IsSelected = false;
+					if (selectedCharacters.Any()) {
+						clearSelectedCharacters();
 
-					selectedCharacter = null;
-					combatGrid.CharacterSelected = false;
+						combatGrid.CharacterSelected = false;
+					}
 				}
 			}
 		}
 
 		if (Input.GetMouseButtonDown(RIGHT_MOUSE_BUTTON)) {
-			if (selectedCharacter != null) {
+			if (selectedCharacters.Any()) {
 				Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
 
 				if (0 <= mousePos.x && mousePos.x <= (combatGrid.cols - 1) && 0 <= mousePos.y && mousePos.y <= (combatGrid.rows - 1)) {
 					GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
 
-					selectedCharacter.SetTargetTile(tile);
+					// TODO: Add logic for selecting single tile with multiple characters
+					selectedCharacters.First().SetTargetTile(tile);
 				}
 			}
 		}
 	}
 
 	private void initializeCombatScene() {
-		combatGrid.Initialize(gameManager.FriendlyClan);
+		combatGrid.Initialize(GameManager.Instance.playerSave);
 
-		selectedCharacter = null;
 		isPaused = false;
+	}
+
+	private void clearSelectedCharacters() {
+		foreach (Character character in selectedCharacters)
+			character.IsSelected = false;
+
+		selectedCharacters.Clear();
 	}
 }
