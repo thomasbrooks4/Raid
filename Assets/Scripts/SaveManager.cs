@@ -3,9 +3,8 @@ using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
 public static class SaveManager {
-
-	private static string SAVE_DATA_PATH = "C:\\Users\\thomas\\Desktop\\raid-dev.save";
-	//private static string SAVE_DATA_PATH = Application.persistentDataPath + "/raid.save";
+	
+	private static string SAVE_DATA_PATH = Application.persistentDataPath + "/raid-dev.save";
 
 	public static void SaveGame() {
 		BinaryFormatter formatter = new BinaryFormatter();

@@ -92,6 +92,7 @@ public class Character : MonoBehaviour {
 	}
 
 	private bool move(GridTile targetTile) {
+		// TODO: Fix bug where two sprites can travel into same tile then get stuck
 		boxCollider.enabled = false;
 		RaycastHit2D hit = Physics2D.Linecast(gridTile.GridPos, targetTile.GridPos, LayerMask.GetMask("Blocking Layer"));
 		boxCollider.enabled = true;

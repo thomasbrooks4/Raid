@@ -38,7 +38,7 @@ public class CombatManager : MonoBehaviour {
 				GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
 
 				if (tile.Character != null) {
-					if (!Input.GetKeyDown(KeyCode.LeftControl))
+					if (!Input.GetKey(KeyCode.LeftControl))
 						clearSelectedCharacters();
 
 					selectedCharacters.Add(tile.Character);
@@ -62,8 +62,9 @@ public class CombatManager : MonoBehaviour {
 				if (0 <= mousePos.x && mousePos.x <= (combatGrid.cols - 1) && 0 <= mousePos.y && mousePos.y <= (combatGrid.rows - 1)) {
 					GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
 
-					// TODO: Add logic for selecting single tile with multiple characters
-					selectedCharacters.First().SetTargetTile(tile);
+					foreach (Character selectedCharacter in selectedCharacters) {
+						selectedCharacter.SetTargetTile(tile);
+					}
 				}
 			}
 		}
