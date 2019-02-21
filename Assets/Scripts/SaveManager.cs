@@ -4,20 +4,14 @@ using UnityEngine;
 
 public static class SaveManager {
 	
-	private static string SAVE_DATA_PATH = Application.persistentDataPath + "/raid-dev.save";
+	private static readonly string SAVE_DATA_PATH = Application.persistentDataPath + "/raid-dev.save";
 
 	public static void SaveGame() {
 		BinaryFormatter formatter = new BinaryFormatter();
 		FileStream stream = new FileStream(SAVE_DATA_PATH, FileMode.Create);
 
-		const int characterAmount = 2;
-		int[][] characterPositions = new int[characterAmount][];
-		characterPositions[0] = new int[] { 0, 0 };
-		characterPositions[1] = new int[] { 1, 4 };
-		string[] characterNames = new string[characterAmount] { "thomas", "brianna" };
-		string[] characterClasses = new string[characterAmount] { "WARRIOR", "WARRIOR" };
-
-		SaveData saveData = new SaveData(characterAmount, characterPositions, characterNames, characterClasses);
+        // SaveData playerSaveData = GameManager.Instance.playerSave;
+        SaveData saveData = CreateSaveData();
 
 		formatter.Serialize(stream, saveData);
 		stream.Close();
@@ -38,4 +32,16 @@ public static class SaveManager {
 			return null;
 		}
 	}
+
+    // TEST PURPOSES
+    private static SaveData CreateSaveData() {
+        const int characterAmount = 2;
+        int[][] characterPositions = new int[characterAmount][];
+        characterPositions[0] = new int[] { 0, 0 };
+        characterPositions[1] = new int[] { 1, 4 };
+        string[] characterNames = { "thomas", "brianna" };
+        string[] characterClasses = { "WARRIOR", "WARRIOR" };
+
+        return new SaveData(characterAmount, characterPositions, characterNames, characterClasses);
+    }
 }

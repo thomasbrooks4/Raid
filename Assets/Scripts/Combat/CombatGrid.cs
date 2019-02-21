@@ -19,11 +19,11 @@ public class CombatGrid : MonoBehaviour {
 		gridTiles = new GridTile[cols, rows];
 		characterSelected = false;
 
-		generateGrid();
-		populatePlayerClan(playerSave);
+		GenerateGrid();
+		PopulatePlayerClan(playerSave);
 	}
 
-	public List<GridTile> getSurroundingTiles(GridTile tile) {
+	public List<GridTile> GetSurroundingTiles(GridTile tile) {
 		List<GridTile> surrounding = new List<GridTile>();
 
 		for (int x = -1; x <= 1; x++) {
@@ -42,7 +42,7 @@ public class CombatGrid : MonoBehaviour {
 		return surrounding;
 	}
 
-	private void generateGrid() {
+	private void GenerateGrid() {
 		gridTransform = new GameObject("Combat Grid").transform;
 
 		for (int x = 0; x < cols; x++) {
@@ -58,7 +58,7 @@ public class CombatGrid : MonoBehaviour {
 		}
 	}
 
-	private void populatePlayerClan(SaveData playerSave) {
+	private void PopulatePlayerClan(SaveData playerSave) {
 		int xPos = 0;
 		for (int i = 0; i < playerSave.characterAmount; i++) {
 			GameObject characterObject;
@@ -70,8 +70,9 @@ public class CombatGrid : MonoBehaviour {
 
 				Character character = characterObject.GetComponent<Character>();
 				character.GridTile = gridTiles[playerSave.characterPositions[i][0], playerSave.characterPositions[i][1]];
-
-				gridTiles[playerSave.characterPositions[i][0], playerSave.characterPositions[i][1]].Character = character;
+                character.CharacterName = playerSave.characterNames[i];
+                characterObject.name = playerSave.characterNames[i];
+                gridTiles[playerSave.characterPositions[i][0], playerSave.characterPositions[i][1]].Character = character;
 			}
 			else {
 				characterObject = Instantiate(warriorPrefab, new Vector3(xPos, i, 0f), Quaternion.identity) as GameObject;
@@ -79,6 +80,7 @@ public class CombatGrid : MonoBehaviour {
 				Character character = characterObject.GetComponent<Character>();
 				character.GridTile = gridTiles[xPos, i];
 				character.CharacterName = playerSave.characterNames[i];
+                characterObject.name = playerSave.characterNames[i];
 				gridTiles[xPos, i].Character = character;
 			}
 		}

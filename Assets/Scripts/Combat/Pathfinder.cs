@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class Pathfinder : MonoBehaviour {
 
-	private static int MOVE_COST_DIAGONAL = 14;
-	private static int MOVE_COST_STRAIGHT = 10;
+	private const int MOVE_COST_DIAGONAL = 14;
+	private const int MOVE_COST_STRAIGHT = 10;
 
 	private CombatGrid grid;
 
@@ -14,25 +14,25 @@ public class Pathfinder : MonoBehaviour {
 		grid = GameObject.FindGameObjectWithTag("Combat Manager").GetComponent<CombatGrid>();
 	}
 
-	public List<GridTile> findPath(GridTile startTile, GridTile endTile) {
+	public List<GridTile> FindPath(GridTile startTile, GridTile endTile) {
 		List<GridTile> openTiles = new List<GridTile>();
 		HashSet<GridTile> searchedTiles = new HashSet<GridTile>();
 
 		startTile.G = 0;
-		startTile.H = getH(startTile, endTile);
+		startTile.H = GetH(startTile, endTile);
 		openTiles.Add(startTile);
 
 		while(openTiles.Count > 0) {
-			GridTile currentTile = getLowestF(openTiles);
+			GridTile currentTile = GetLowestF(openTiles);
 			openTiles.Remove(currentTile);
 			searchedTiles.Add(currentTile);
 
-			List<GridTile> surroundingTiles = grid.getSurroundingTiles(currentTile);
+			List<GridTile> surroundingTiles = grid.GetSurroundingTiles(currentTile);
 
 			if (surroundingTiles.Contains(endTile)) {
 				endTile.Parent = currentTile;
 
-				return createPath(startTile, endTile);
+				return CreatePath(startTile, endTile);
 			}
 
 			foreach (GridTile surroundingTile in surroundingTiles) {
@@ -40,11 +40,11 @@ public class Pathfinder : MonoBehaviour {
 					continue;
 				}
 
-				int gCost = currentTile.G + getMoveCost(currentTile, surroundingTile);
+				int gCost = currentTile.G + GetMoveCost(currentTile, surroundingTile);
 				if (gCost < surroundingTile.G || !openTiles.Contains(surroundingTile)) {
 					surroundingTile.Parent = currentTile;
 					surroundingTile.G = gCost;
-					surroundingTile.H = getH(surroundingTile, endTile);
+					surroundingTile.H = GetH(surroundingTile, endTile);
 
 					if (!openTiles.Contains(surroundingTile)) {
 						openTiles.Add(surroundingTile);
@@ -56,11 +56,11 @@ public class Pathfinder : MonoBehaviour {
 		return null;
 	}
 
-	private int getH(GridTile startTile, GridTile endTile) {
+	private int GetH(GridTile startTile, GridTile endTile) {
 		return Math.Abs(endTile.GridPos.x - startTile.GridPos.x) + Math.Abs(endTile.GridPos.y - startTile.GridPos.y);
 	}
 
-	private GridTile getLowestF(List<GridTile> gridTiles) {
+	private GridTile GetLowestF(List<GridTile> gridTiles) {
 		GridTile minTile = gridTiles.First();
 
 		foreach (GridTile tile in gridTiles) {
@@ -72,7 +72,7 @@ public class Pathfinder : MonoBehaviour {
 		return minTile;
 	}
 
-	private List<GridTile> createPath(GridTile startTile, GridTile endTile) {
+	private List<GridTile> CreatePath(GridTile startTile, GridTile endTile) {
 		List<GridTile> path = new List<GridTile>();
 		GridTile currentTile = endTile;
 
@@ -85,7 +85,7 @@ public class Pathfinder : MonoBehaviour {
 		return path;
 	}
 
-	private int getMoveCost(GridTile startTile, GridTile endTile) {
+	private int GetMoveCost(GridTile startTile, GridTile endTile) {
 		int distanceX = Math.Abs(endTile.GridPos.x - startTile.GridPos.x);
 		int distanceY = Math.Abs(endTile.GridPos.y - startTile.GridPos.y);
 

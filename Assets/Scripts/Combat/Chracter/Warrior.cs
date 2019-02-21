@@ -1,40 +1,90 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Warrior : Character {
 
-	private static float BASE_SPEED = 0.9f;
-	private static float GUARD_SPEED = 0.5f;
+    private const int DEFAULT_HEALTH = 125;
+    private const int DEFAULT_DAMAGE = 35;
+    private const float DEFAULT_SPEED = 0.9f;
+    private const int DEFAULT_ATTACK_RANGE = 1;
+    private const float GUARD_SPEED = 0.5f;
+    private const float COOLDOWN = 0.2f;
 
-	private bool onGuard;
+    private bool onGuard;
+    private bool highGuard;
 
-	// Start is called before the first frame update
-	public override void Start() {
-		base.Start();
+    public bool OnGuard { get => onGuard; set => onGuard = value; }
+    public bool HighGuard { get => highGuard; set => highGuard = value; }
 
-		maxHealth = 125;
-		health = maxHealth;
-		speed = BASE_SPEED;
-		cooldown = 0.2f;
+    // Start is called before the first frame update
+    public override void Start() {
+        base.Start();
 
-		onGuard = false;
-	}
+        characterClass = CharacterClass.WARRIOR;
+        maxHealth = DEFAULT_HEALTH;
+        health = maxHealth;
+        damage = DEFAULT_DAMAGE;
+        speed = DEFAULT_SPEED;
+        attackRange = DEFAULT_ATTACK_RANGE;
+        cooldown = COOLDOWN;
 
-	// Update is called once per frame
-	public override void Update() {
-		base.Update();
+        onGuard = false;
+        highGuard = false;
+    }
 
-		if (Input.GetKeyDown(KeyCode.G))
-			changeGuard();
-	}
-	
-	private void changeGuard() {
-		onGuard = !onGuard;
+    // Update is called once per frame
+    public override void Update() {
+        base.Update();
 
-		if (onGuard)
-			speed = GUARD_SPEED;
-		else
-			speed = BASE_SPEED;
-	}
+        if (isAttacking || onCooldown)
+            return;
+
+        if (Input.GetKeyDown(KeyCode.G))
+            ToggleGuard();
+    }
+
+    protected override bool AttemptAttack() {
+        // Can't attack while guarding low
+        if (onGuard && !highGuard)
+            return false;
+
+        return true;
+    }
+
+    protected override void AttemptDamage() {
+        if (target.CharacterClass.Equals(CharacterClass.WARRIOR)) {
+            Warrior enemy = (Warrior)target;
+
+            if (enemy.OnGuard) {
+                if (highAttack)
+                    if (!enemy.HighGuard)
+                        enemy.TakeDamage(damage);
+                else
+                    if (enemy.HighGuard)
+                        enemy.TakeDamage(damage);
+            }
+            else
+                enemy.TakeDamage(damage);
+        }
+    }
+
+    public override void ToggleAttackStance() {
+        highAttack = !highAttack;
+
+        if (onGuard) {
+            if (highAttack && highGuard)
+                highGuard = false;
+
+            if (!highAttack && !highGuard)
+                highGuard = true;
+        }
+    }
+
+    private void ToggleGuard() {
+        onGuard = !onGuard;
+
+        if (onGuard)
+            speed = GUARD_SPEED;
+        else
+            speed = DEFAULT_SPEED;
+    }
 }

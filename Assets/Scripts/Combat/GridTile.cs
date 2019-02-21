@@ -5,8 +5,8 @@ public class GridTile : MonoBehaviour {
 	private SpriteRenderer spriteRenderer;
 	private Color startColor;
 
-	private Vector2Int gridPos;
-	private CombatGrid grid;
+    private CombatGrid grid;
+    private Vector2Int gridPos;
 	private Character character;
 
 	public Vector2Int GridPos { get => gridPos; }

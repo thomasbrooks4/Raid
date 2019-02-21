@@ -4,23 +4,23 @@ using UnityEngine;
 
 public class CombatManager : MonoBehaviour {
 	
-	private static int LEFT_MOUSE_BUTTON = 0;
-	private static int RIGHT_MOUSE_BUTTON = 1;
+	private const int LEFT_MOUSE_BUTTON = 0;
+	private const int RIGHT_MOUSE_BUTTON = 1;
 	
 	private CombatGrid combatGrid;
 
-	[SerializeField]
 	private List<Character> selectedCharacters = new List<Character>();
 	private bool isPaused;
 
 	void Start() {
 		combatGrid = GetComponent<CombatGrid>();
 
-		initializeCombatScene();
+		InitializeCombatScene();
 	}
 
 	// Update is called once per frame
 	void Update() {
+        // Pause combat
 		if (Input.GetKeyDown(KeyCode.Space)) {
 			isPaused = !isPaused;
 
@@ -34,32 +34,32 @@ public class CombatManager : MonoBehaviour {
 		if (Input.GetMouseButtonDown(LEFT_MOUSE_BUTTON)) {
 			Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
 
-			if (0 <= mousePos.x && mousePos.x <= (combatGrid.cols - 1) && 0 <= mousePos.y && mousePos.y <= (combatGrid.rows - 1)) {
+			if (0 <= mousePos.x && mousePos.x <= (combatGrid.cols - 1) 
+            && 0 <= mousePos.y && mousePos.y <= (combatGrid.rows - 1)) {
 				GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
 
 				if (tile.Character != null) {
 					if (!Input.GetKey(KeyCode.LeftControl))
-						clearSelectedCharacters();
+						ClearSelectedCharacters();
 
 					selectedCharacters.Add(tile.Character);
 					tile.Character.IsSelected = true;
 					combatGrid.CharacterSelected = true;
 				}
 				else {
-					if (selectedCharacters.Any()) {
-						clearSelectedCharacters();
-
-						combatGrid.CharacterSelected = false;
-					}
+					if (selectedCharacters.Any())
+						ClearSelectedCharacters();
 				}
 			}
 		}
 
+        // Movement
 		if (Input.GetMouseButtonDown(RIGHT_MOUSE_BUTTON)) {
 			if (selectedCharacters.Any()) {
 				Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
 
-				if (0 <= mousePos.x && mousePos.x <= (combatGrid.cols - 1) && 0 <= mousePos.y && mousePos.y <= (combatGrid.rows - 1)) {
+				if (0 <= mousePos.x && mousePos.x <= (combatGrid.cols - 1) 
+                && 0 <= mousePos.y && mousePos.y <= (combatGrid.rows - 1)) {
 					GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
 
 					foreach (Character selectedCharacter in selectedCharacters) {
@@ -68,18 +68,33 @@ public class CombatManager : MonoBehaviour {
 				}
 			}
 		}
-	}
 
-	private void initializeCombatScene() {
+        // Change stance
+        if (Input.GetKeyDown(KeyCode.S)) {
+            foreach (Character character in selectedCharacters) {
+                character.ToggleAttackStance();
+            }
+        }
+
+        // Reset direction
+        if (Input.GetKeyDown(KeyCode.D)) {
+            foreach (Character character in selectedCharacters) {
+                character.ResetDirection();
+            }
+        }
+    }
+
+	private void InitializeCombatScene() {
 		combatGrid.Initialize(GameManager.Instance.playerSave);
 
 		isPaused = false;
 	}
 
-	private void clearSelectedCharacters() {
+	private void ClearSelectedCharacters() {
 		foreach (Character character in selectedCharacters)
 			character.IsSelected = false;
 
+        combatGrid.CharacterSelected = false;
 		selectedCharacters.Clear();
 	}
 }
