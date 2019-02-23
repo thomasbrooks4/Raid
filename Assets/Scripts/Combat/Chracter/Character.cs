@@ -6,7 +6,7 @@ using UnityEngine;
 public abstract class Character : MonoBehaviour {
 
     private const float BASE_MOVE_SPEED = 0.5f;
-    private const float BASE_ATTACK_SPEED = 0.75f;
+    private const float BASE_ATTACK_SPEED = 3f;
 
     private SpriteRenderer spriteRenderer;
     private BoxCollider2D boxCollider;
@@ -14,30 +14,34 @@ public abstract class Character : MonoBehaviour {
     private Pathfinder pathfinder;
     private Color startColor;
 
-    private List<GridTile> path = new List<GridTile>();
+    protected List<GridTile> path = new List<GridTile>();
+    [SerializeField]
     private Vector2Int facingDirection;
-    private GridTile gridTile;
+    private GridTile currentTile;
     protected Character target;
 
-    private bool friendly;
-    private bool isAlive;
-    private bool isSelected;
-    private bool isMoving;
-    protected bool isAttacking;
-    protected bool onCooldown;
+    [SerializeField]
+    protected bool friendly;
+    protected bool isAlive;
+    protected bool isSelected;
+    protected bool isMoving;
+    protected bool attackCooldown;
+    protected bool actionCooldown;
     protected bool highAttack;
     protected bool directionLocked;
+    protected bool focusLocked;
 
     protected string characterName;
     protected CharacterClass characterClass;
     protected int maxHealth;
+    [SerializeField]
     protected int health;
     protected int damage;
     protected float speed;
     protected int attackRange;
     protected float cooldown;
 
-    public GridTile GridTile { get => gridTile; set => gridTile = value; }
+    public GridTile GridTile { get => currentTile; set => currentTile = value; }
 
     public bool Friendly { get => friendly; set => friendly = value; }
     public bool IsAlive { get => isAlive; set => isAlive = value; }
@@ -57,11 +61,13 @@ public abstract class Character : MonoBehaviour {
         startColor = spriteRenderer.material.color;
 
         isAlive = true;
-        isMoving = false;
         isSelected = false;
-        onCooldown = false;
+        isMoving = false;
+        attackCooldown = false;
+        actionCooldown = false;
         highAttack = false;
         directionLocked = false;
+        focusLocked = false;
     }
 
     public virtual void Update() {
@@ -70,18 +76,19 @@ public abstract class Character : MonoBehaviour {
         else
             spriteRenderer.material.color = startColor;
 
-        if (isMoving || isAttacking || onCooldown)
+        if (isMoving || attackCooldown || actionCooldown)
             return;
 
         if (path.Any())
-            StartMoving();
+            Move();
         else if (target != null)
             StartAttacking();
     }
 
     #region Highlighting
     void OnMouseOver() {
-        spriteRenderer.material.color = Color.yellow;
+        if (friendly)
+            spriteRenderer.material.color = Color.yellow;
     }
 
     void OnMouseExit() {
@@ -91,33 +98,31 @@ public abstract class Character : MonoBehaviour {
     #endregion
 
     #region Movment
-    private void StartMoving() {
+
+    private bool Move() {
         GridTile nextTile = path.First();
-        path.Remove(path.First());
 
-        StartCoroutine(StartActionCooldown());
-        Move(nextTile);
-    }
+        if (nextTile.Character == null) {
+            path.Remove(path.First());
 
-    private bool Move(GridTile targetTile) {
-        // TODO: Fix bug where two sprites can travel into same tile then get stuck
-        boxCollider.enabled = false;
-        RaycastHit2D hit = Physics2D.Linecast(gridTile.GridPos, targetTile.GridPos, LayerMask.GetMask("Blocking Layer"));
-        boxCollider.enabled = true;
+            if (!directionLocked)
+                facingDirection = nextTile.GridPos - currentTile.GridPos;
 
-        if (hit.transform == null) {
-            facingDirection = targetTile.GridPos - gridTile.GridPos;
+            StartCoroutine(ActionCooldown());
+            StartCoroutine(Moving(nextTile));
 
-            StartCoroutine(Moving(targetTile));
             return true;
         }
+
+        // Find new path
+        path = pathfinder.FindPath(currentTile, path.Last());
 
         return false;
     }
 
     private IEnumerator Moving(GridTile targetTile) {
-        // TODO: Move animation
         isMoving = true;
+        targetTile.Character = this;
 
         float sqrRemainingDistance = (GetTransfromPostionVector2() - targetTile.GridPos).sqrMagnitude;
 
@@ -131,10 +136,13 @@ public abstract class Character : MonoBehaviour {
             yield return null;
         }
 
+        // TODO: Potentially move this to the top so characters can move into current tile earlier
+        currentTile.Character = null;
+        currentTile = targetTile;
+
+        FaceTarget();
+
         isMoving = false;
-        gridTile.Character = null;
-        gridTile = targetTile;
-        gridTile.Character = this;
     }
     #endregion
 
@@ -142,16 +150,19 @@ public abstract class Character : MonoBehaviour {
     private void StartAttacking() {
         if (target.IsAlive) {
             // Check if range to target
-            Vector2Int distance = target.GridTile.GridPos - gridTile.GridPos;
+            Vector2Int distance = target.GridTile.GridPos - currentTile.GridPos;
             if (Mathf.Abs(distance.x) > attackRange || Mathf.Abs(distance.y) > attackRange) {
-                // Set path to nearest empty tile to enemy
+                SetPathToNearestEmptyTile();
+
                 return;
             }
 
-            // TODO: Check if facing target
-
-            StartCoroutine(StartActionCooldown());
-            Attack();
+            // Check if facing target
+            if (currentTile.GridPos + facingDirection == target.GridTile.GridPos) {
+                if (!directionLocked)
+                    FaceTarget();
+                Attack();
+            }
         }
         else
             target = null;
@@ -160,9 +171,8 @@ public abstract class Character : MonoBehaviour {
     private bool Attack() {
         // Possibilty to start attack
         if (AttemptAttack()) {
-            StartCoroutine(Attacking());
+            StartCoroutine(AttackCooldown());
             AttemptDamage();
-
             return true;
         }
 
@@ -173,39 +183,77 @@ public abstract class Character : MonoBehaviour {
     protected abstract void AttemptDamage();
     public abstract void ToggleAttackStance();
 
-    private IEnumerator Attacking() {
-        // TODO: Attack animation
-        isAttacking = true;
+    private IEnumerator AttackCooldown() {
+        attackCooldown = true;
 
-        float attackCooldown = BASE_ATTACK_SPEED * speed;
+        float cooldownTime = BASE_ATTACK_SPEED * speed;
 
-        while (attackCooldown > 0f) {
-            attackCooldown -= Time.deltaTime;
+        while (cooldownTime > 0f) {
+            cooldownTime -= Time.deltaTime;
             yield return null;
         }
 
-        isAttacking = false;
+        attackCooldown = false;
     }
     #endregion
 
     public void SetTargetTile(GridTile targetTile) {
         if (targetTile.Character != null) {
-            target = targetTile.Character;
+            if (IsEnemy(targetTile.Character)) {
+                if (targetTile.Character.IsAlive)
+                    target = targetTile.Character;
 
-            Vector2Int distance = targetTile.GridPos - gridTile.GridPos;
-            if (Mathf.Abs(distance.x) > attackRange || Mathf.Abs(distance.y) > attackRange) {
-                // TODO: Set path to nearest empty tile to enemy
+                Vector2Int distance = targetTile.GridPos - currentTile.GridPos;
+                if (Mathf.Abs(distance.x) > attackRange || Mathf.Abs(distance.y) > attackRange) {
+                    SetPathToNearestEmptyTile();
+                }
             }
         }
         else {
-            // TODO: Add ability to remain locked on?
-            target = null;
-            path = pathfinder.FindPath(gridTile, targetTile);
+            if (!focusLocked)
+                target = null;
+            path = pathfinder.FindPath(currentTile, targetTile);
         }
+    }
+
+    public void RotateLeft() {
+        int x, y;
+
+        if (facingDirection.x != -facingDirection.y)
+            x = facingDirection.x + -facingDirection.y;
+        else
+            x = -facingDirection.y;
+
+        if (facingDirection.y != facingDirection.x)
+            y = facingDirection.y + facingDirection.x;
+        else
+            y = facingDirection.x;
+
+        facingDirection = new Vector2Int(x, y);
+    }
+
+    public void RotateRight() {
+        int x, y;
+
+        if (facingDirection.x != facingDirection.y)
+            x = facingDirection.x + facingDirection.y;
+        else
+            x = facingDirection.y;
+
+        if (facingDirection.y != -facingDirection.x)
+            y = facingDirection.y + -facingDirection.x;
+        else
+            y = -facingDirection.x;
+
+        facingDirection = new Vector2Int(x, y);
     }
 
     public void ToggleDirectionLocked() {
         directionLocked = !directionLocked;
+    }
+
+    public void ToggleFocusLocked() {
+        focusLocked = !focusLocked;
     }
 
     public void ResetDirection() {
@@ -227,8 +275,8 @@ public abstract class Character : MonoBehaviour {
         }
     }
 
-    private IEnumerator StartActionCooldown() {
-        onCooldown = true;
+    private IEnumerator ActionCooldown() {
+        actionCooldown = true;
 
         float cooldownTime = cooldown;
 
@@ -237,10 +285,35 @@ public abstract class Character : MonoBehaviour {
             yield return null;
         }
 
-        onCooldown = false;
+        actionCooldown = false;
     }
 
     #region Helper Methods
+    private bool IsEnemy(Character character) {
+        if (friendly)
+            return !character.Friendly;
+        else
+            return character.Friendly;
+    }
+
+    private void SetPathToNearestEmptyTile() {
+        path = pathfinder.FindPath(currentTile, target.GridTile);
+        path.RemoveAt(path.Count - 1);
+    }
+
+    // TODO: Get rounded direction based on target location
+    private void FaceTarget() {
+        Vector2Int newDirection = target.GridTile.GridPos - currentTile.GridPos;
+
+        if (!path.Any() && target != null && !directionLocked && IsDirection(newDirection)) {
+            facingDirection = newDirection;
+        }
+    }
+
+    private bool IsDirection(Vector2Int direction) {
+        return (-1 <= direction.x && direction.x <= 1 && -1 <= direction.y && direction.y <= 1);
+    }
+
     private Vector2 GetTransfromPostionVector2() {
         return new Vector2(transform.position.x, transform.position.y);
     }

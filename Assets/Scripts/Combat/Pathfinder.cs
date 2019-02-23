@@ -56,7 +56,7 @@ public class Pathfinder : MonoBehaviour {
 		return null;
 	}
 
-	private int GetH(GridTile startTile, GridTile endTile) {
+    private int GetH(GridTile startTile, GridTile endTile) {
 		return Math.Abs(endTile.GridPos.x - startTile.GridPos.x) + Math.Abs(endTile.GridPos.y - startTile.GridPos.y);
 	}
 

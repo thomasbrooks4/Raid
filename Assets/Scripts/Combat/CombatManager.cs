@@ -22,12 +22,7 @@ public class CombatManager : MonoBehaviour {
 	void Update() {
         // Pause combat
 		if (Input.GetKeyDown(KeyCode.Space)) {
-			isPaused = !isPaused;
-
-			if (isPaused)
-				Time.timeScale = 0f;
-			else
-				Time.timeScale = 1f;
+            TogglePause();
 		}
 
 		// Selection
@@ -38,7 +33,7 @@ public class CombatManager : MonoBehaviour {
             && 0 <= mousePos.y && mousePos.y <= (combatGrid.rows - 1)) {
 				GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
 
-				if (tile.Character != null) {
+				if (tile.Character != null && tile.Character.Friendly) {
 					if (!Input.GetKey(KeyCode.LeftControl))
 						ClearSelectedCharacters();
 
@@ -69,6 +64,34 @@ public class CombatManager : MonoBehaviour {
 			}
 		}
 
+        // Rotate left
+        if (Input.GetKeyDown(KeyCode.E)) {
+            foreach (Character character in selectedCharacters) {
+                character.RotateLeft();
+            }
+        }
+
+        // Rotate right
+        if (Input.GetKeyDown(KeyCode.R)) {
+            foreach (Character character in selectedCharacters) {
+                character.RotateRight();
+            }
+        }
+
+        // Reset direction
+        if (Input.GetKeyDown(KeyCode.T)) {
+            foreach (Character character in selectedCharacters) {
+                character.ResetDirection();
+            }
+        }
+
+        // Toggle attack stance
+        if (Input.GetKeyDown(KeyCode.A)) {
+            foreach (Character character in selectedCharacters) {
+                character.ToggleAttackStance();
+            }
+        }
+
         // Change stance
         if (Input.GetKeyDown(KeyCode.S)) {
             foreach (Character character in selectedCharacters) {
@@ -76,19 +99,35 @@ public class CombatManager : MonoBehaviour {
             }
         }
 
-        // Reset direction
+        // Toggle direction lock
         if (Input.GetKeyDown(KeyCode.D)) {
             foreach (Character character in selectedCharacters) {
-                character.ResetDirection();
+                character.ToggleDirectionLocked();
+            }
+        }
+
+        // Toggle focus lock
+        if (Input.GetKeyDown(KeyCode.F)) {
+            foreach (Character character in selectedCharacters) {
+                character.ToggleFocusLocked();
             }
         }
     }
 
-	private void InitializeCombatScene() {
-		combatGrid.Initialize(GameManager.Instance.playerSave);
+    private void InitializeCombatScene() {
+        combatGrid.Initialize(GameManager.Instance.playerSave);
 
-		isPaused = false;
-	}
+        isPaused = false;
+    }
+
+    private void TogglePause() {
+        isPaused = !isPaused;
+
+        if (isPaused)
+            Time.timeScale = 0f;
+        else
+            Time.timeScale = 1f;
+    }
 
 	private void ClearSelectedCharacters() {
 		foreach (Character character in selectedCharacters)

@@ -47,18 +47,18 @@ public class GridTile : MonoBehaviour {
 	}
 
 	#region Comparator Overrides
-	public override bool Equals(System.Object obj) {
-		if ((obj == null || !this.GetType().Equals(obj.GetType()))) {
+	public override bool Equals(object other) {
+		if ((other == null || !this.GetType().Equals(other.GetType()))) {
 			return false;
 		}
 		else {
-			GridTile t = (GridTile)obj;
+			GridTile t = (GridTile)other;
 			return (gridPos.x == t.GridPos.x) && (gridPos.y == t.GridPos.y);
 		}
 	}
 
-	public override int GetHashCode() {
-		return gridPos.x ^ gridPos.y;
-	}
-	#endregion
+    public override int GetHashCode() {
+        return gridPos.x ^ gridPos.y;
+    }
+    #endregion
 }

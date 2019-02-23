@@ -35,7 +35,7 @@ public class Warrior : Character {
     public override void Update() {
         base.Update();
 
-        if (isAttacking || onCooldown)
+        if (attackCooldown || actionCooldown)
             return;
 
         if (Input.GetKeyDown(KeyCode.G))
@@ -54,16 +54,18 @@ public class Warrior : Character {
         if (target.CharacterClass.Equals(CharacterClass.WARRIOR)) {
             Warrior enemy = (Warrior)target;
 
+            // TODO: Cleanup for if enemy is facing
             if (enemy.OnGuard) {
                 if (highAttack)
                     if (!enemy.HighGuard)
                         enemy.TakeDamage(damage);
-                else
+                    else
                     if (enemy.HighGuard)
                         enemy.TakeDamage(damage);
             }
-            else
+            else {
                 enemy.TakeDamage(damage);
+            }
         }
     }
 
