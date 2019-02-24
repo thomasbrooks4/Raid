@@ -4,6 +4,7 @@ public class GridTile : MonoBehaviour {
 
 	private SpriteRenderer spriteRenderer;
 	private Color startColor;
+	private Color highlightColor;
 
     private CombatGrid grid;
     private Vector2Int gridPos;
@@ -33,11 +34,12 @@ public class GridTile : MonoBehaviour {
 	void Start() {
 		spriteRenderer = GetComponent<SpriteRenderer>();
 		startColor = spriteRenderer.material.color;
+		highlightColor = new Color(startColor.r, startColor.g, startColor.b, 1.2f);
 	}
 
 	void OnMouseOver() {
 		if (character == null && grid.CharacterSelected)
-			spriteRenderer.material.color = Color.gray;
+			spriteRenderer.material.color = highlightColor;
 		else
 			spriteRenderer.material.color = startColor;
 	}

@@ -9,7 +9,9 @@ public class Warrior : Character {
     private const float GUARD_SPEED = 0.5f;
     private const float COOLDOWN = 0.2f;
 
+	[SerializeField]
     private bool onGuard;
+	[SerializeField]
     private bool highGuard;
 
     public bool OnGuard { get => onGuard; set => onGuard = value; }
@@ -35,7 +37,7 @@ public class Warrior : Character {
     public override void Update() {
         base.Update();
 
-        if (attackCooldown || actionCooldown)
+        if (attackCooldown)
             return;
 
         if (Input.GetKeyDown(KeyCode.G))

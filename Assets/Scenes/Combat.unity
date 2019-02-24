@@ -147,8 +147,8 @@ Camera:
   m_GameObject: {fileID: 534669902}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0.4245283, g: 0.32624537, b: 0.22227661, a: 0}
   m_projectionMatrixMode: 1
   m_SensorSize: {x: 36, y: 24}
   m_LensShift: {x: 0, y: 0}
@@ -238,7 +238,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7c8a95d35a501443a73b9761fd4e5fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  selectedCharacters: []
 --- !u!114 &1444882169
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -286,6 +285,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f01b50374abad4a4d9bafddc7571395f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerSave:
+    characterAmount: 0
+    characterNames: []
+    characterClasses: []
 --- !u!4 &1775337270
 Transform:
   m_ObjectHideFlags: 0
