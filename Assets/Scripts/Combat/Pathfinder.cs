@@ -56,6 +56,13 @@ public class Pathfinder : MonoBehaviour {
 		return null;
 	}
 
+    public List<GridTile> FindPathToNearestTile(GridTile startTile, GridTile endTile) {
+        List<GridTile> path = FindPath(startTile, endTile);
+        path.RemoveAt(path.Count - 1);
+
+        return path;
+    }
+
     private int GetH(GridTile startTile, GridTile endTile) {
 		return Math.Abs(endTile.GridPos.x - startTile.GridPos.x) + Math.Abs(endTile.GridPos.y - startTile.GridPos.y);
 	}

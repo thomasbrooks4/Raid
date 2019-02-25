@@ -29,8 +29,7 @@ public class CombatManager : MonoBehaviour {
 		if (Input.GetMouseButtonDown(LEFT_MOUSE_BUTTON)) {
 			Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
 
-			if (0 <= mousePos.x && mousePos.x <= (combatGrid.cols - 1)
-			&& 0 <= mousePos.y && mousePos.y <= (combatGrid.rows - 1)) {
+			if (WithinGrid(mousePos)) {
 				GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
 
 				if (tile.Character != null && tile.Character.Friendly) {
@@ -49,12 +48,11 @@ public class CombatManager : MonoBehaviour {
 		}
 
 		// Movement
-		if (Input.GetMouseButtonDown(RIGHT_MOUSE_BUTTON)) {
+		if (Input.GetMouseButtonDown(RIGHT_MOUSE_BUTTON) && !Input.GetKey(KeyCode.LeftShift)) {
 			if (selectedCharacters.Any()) {
 				Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
 
-				if (0 <= mousePos.x && mousePos.x <= (combatGrid.cols - 1)
-				&& 0 <= mousePos.y && mousePos.y <= (combatGrid.rows - 1)) {
+				if (WithinGrid(mousePos)) {
 					GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
 
 					foreach (Character selectedCharacter in selectedCharacters) {
@@ -64,8 +62,25 @@ public class CombatManager : MonoBehaviour {
 			}
 		}
 
-		// Rotate left
-		if (Input.GetKeyDown(KeyCode.E)) {
+        // Create paths
+        if (Input.GetMouseButton(RIGHT_MOUSE_BUTTON) && Input.GetKey(KeyCode.LeftShift)) {
+            if (selectedCharacters.Any()) {
+                Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+
+                if (WithinGrid(mousePos)) {
+                    GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
+
+                    foreach (Character selectedCharacter in selectedCharacters) {
+                        if (!selectedCharacter.Path.Contains(tile)) {
+                            selectedCharacter.Path.Add(tile);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Rotate left
+        if (Input.GetKeyDown(KeyCode.E)) {
 			foreach (Character character in selectedCharacters) {
 				character.RotateLeft();
 			}
@@ -136,4 +151,10 @@ public class CombatManager : MonoBehaviour {
 		combatGrid.CharacterSelected = false;
 		selectedCharacters.Clear();
 	}
+
+    private bool WithinGrid(Vector3Int position) {
+        return 0 <= position.x && position.x <= (combatGrid.cols - 1)
+                && 0 <= position.y && position.y <= (combatGrid.rows - 1);
+    }
+
 }
