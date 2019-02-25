@@ -13,11 +13,11 @@ GameObject:
   - component: {fileID: 4969300885540625414}
   - component: {fileID: 4617795503519845127}
   - component: {fileID: 2896563168614158134}
-  - component: {fileID: 244970667911857822}
   - component: {fileID: 8399146324132536588}
+  - component: {fileID: 244970667911857822}
   m_Layer: 9
   m_Name: Warrior
-  m_TagString: Friendly
+  m_TagString: Character
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -150,18 +150,6 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!114 &244970667911857822
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7202171300365767500}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 47ed2617de87a5b428a1d29df78e9d74, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &8399146324132536588
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -174,6 +162,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f18e3e1b6862ab349b90338fab482e30, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  path: []
-  isMoving: 0
+  facingDirection: {x: 0, y: 0}
+  friendly: 0
+  isAlive: 0
   isSelected: 0
+  isMoving: 0
+  attackCooldown: 0
+  highAttack: 0
+  directionLocked: 0
+  focusLocked: 0
+  health: 0
+  onGuard: 0
+  highGuard: 0
+--- !u!114 &244970667911857822
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7202171300365767500}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47ed2617de87a5b428a1d29df78e9d74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

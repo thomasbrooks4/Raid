@@ -14,10 +14,13 @@ public abstract class Character : MonoBehaviour {
     private Pathfinder pathfinder;
     private Color startColor;
 
+    [SerializeField]
     private List<GridTile> path = new List<GridTile>();
     [SerializeField]
     private Vector2Int facingDirection;
+    [SerializeField]
     private GridTile currentTile;
+    [SerializeField]
     protected Character target;
 
     [SerializeField]
@@ -49,6 +52,7 @@ public abstract class Character : MonoBehaviour {
 
     public List<GridTile> Path { get => path; set => path = value; }
     public GridTile GridTile { get => currentTile; set => currentTile = value; }
+    public Character Target { get => target; set => target = value; }
 
     public bool Friendly { get => friendly; set => friendly = value; }
     public bool IsAlive { get => isAlive; set => isAlive = value; }
@@ -77,35 +81,37 @@ public abstract class Character : MonoBehaviour {
     }
 
     public virtual void Update() {
-        if (isSelected)
-            spriteRenderer.material.color = Color.yellow;
-        else
-            spriteRenderer.material.color = startColor;
+        if (isAlive) {
+            if (isSelected)
+                spriteRenderer.material.color = Color.yellow;
+            else
+                spriteRenderer.material.color = startColor;
 
-        if (isMoving || attackCooldown)
-            return;
+            if (isMoving)
+                return;
 
-        // TODO: Keep in mind that archer's should move only until ABLE to attack (typically)
-        if (path.Any())
-            Move();
-        else {
-            if (target != null) {
-                if (WithinAttackRange(target.GridTile))
-                    StartAttacking();
-                else 
-                    path = pathfinder.FindPathToNearestTile(currentTile, target.GridTile);
+            // TODO: Keep in mind that archer's should move only until ABLE to attack (typically)
+            if (path.Any())
+                Move();
+            else {
+                if (target != null) {
+                    if (WithinAttackRange(target.GridTile) && !attackCooldown)
+                        StartAttacking();
+                    else
+                        path = pathfinder.FindPathToNearestTile(currentTile, target.GridTile);
+                }
             }
         }
     }
 
     #region Highlighting
     void OnMouseOver() {
-        if (friendly)
+        if (isAlive && friendly)
             spriteRenderer.material.color = Color.yellow;
     }
 
     void OnMouseExit() {
-        if (!IsSelected)
+        if (isAlive && !IsSelected)
             spriteRenderer.material.color = startColor;
     }
     #endregion
@@ -158,7 +164,7 @@ public abstract class Character : MonoBehaviour {
         currentTile.Character = null;
         currentTile = targetTile;
 
-        if (target != null)
+        if (!path.Any() && target != null)
             FaceTarget();
 
         isMoving = false;
@@ -283,31 +289,27 @@ public abstract class Character : MonoBehaviour {
         if (health <= 0) {
             health = 0;
             isAlive = false;
+            spriteRenderer.material.color = startColor;
         }
     }
 
-    #region Helper Methods
-    private bool IsEnemy(Character character) {
-        if (friendly)
-            return !character.Friendly;
-        else
-            return character.Friendly;
+    public bool IsEnemy(Character character) {
+        return friendly ? !character.Friendly : character.Friendly;
     }
 
+    #region Helper Methods
     // TODO: Get rounded direction based on target location
     private void FaceTarget() {
-        if (!path.Any() && target != null) {
-            Vector2Int newDirection = target.GridTile.GridPos - currentTile.GridPos;
+        Vector2Int newDirection = target.GridTile.GridPos - currentTile.GridPos;
 
-            if (!directionLocked && IsDirection(newDirection)) {
-                facingDirection = newDirection;
-            }
+        if (!directionLocked && IsDirection(newDirection)) {
+            facingDirection = newDirection;
         }
     }
 
     private bool WithinAttackRange(GridTile tile) {
         Vector2Int distance = tile.GridPos - currentTile.GridPos;
-        return Mathf.Abs(distance.x) <= attackRange || Mathf.Abs(distance.y) <= attackRange;
+        return Mathf.Abs(distance.x) <= attackRange && Mathf.Abs(distance.y) <= attackRange;
     }
 
     private bool IsAdjacent(GridTile tile) {
