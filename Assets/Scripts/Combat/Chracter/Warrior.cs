@@ -36,12 +36,6 @@ public class Warrior : Character {
     // Update is called once per frame
     public override void Update() {
         base.Update();
-
-        if (attackCooldown)
-            return;
-
-        if (Input.GetKeyDown(KeyCode.G))
-            ToggleGuard();
     }
 
     protected override bool AttemptAttack() {
@@ -58,12 +52,14 @@ public class Warrior : Character {
 
             // TODO: Cleanup for if enemy is facing
             if (enemy.OnGuard) {
-                if (highAttack)
+                if (highAttack) {
                     if (!enemy.HighGuard)
                         enemy.TakeDamage(damage);
-                    else
+                }
+                else {
                     if (enemy.HighGuard)
                         enemy.TakeDamage(damage);
+                }
             }
             else {
                 enemy.TakeDamage(damage);
@@ -72,23 +68,22 @@ public class Warrior : Character {
     }
 
     public override void ToggleAttackStance() {
-        highAttack = !highAttack;
-
-        if (onGuard) {
-            if (highAttack && highGuard)
-                highGuard = false;
-
-            if (!highAttack && !highGuard)
-                highGuard = true;
-        }
+        if (!onGuard)
+            highAttack = !highAttack;
     }
 
-    private void ToggleGuard() {
+    public void ToggleGuard() {
         onGuard = !onGuard;
+        highAttack = false;
 
         if (onGuard)
             speed = GUARD_SPEED;
         else
             speed = DEFAULT_SPEED;
+    }
+
+    public void ToggleGuardStance() {
+        if (onGuard)
+            highGuard = !highGuard;
     }
 }

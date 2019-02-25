@@ -95,8 +95,10 @@ public abstract class Character : MonoBehaviour {
                 Move();
             else {
                 if (target != null) {
-                    if (WithinAttackRange(target.GridTile) && !attackCooldown)
-                        StartAttacking();
+                    if (WithinAttackRange(target.GridTile)) {
+                        if (!attackCooldown)
+                            StartAttacking();
+                    }
                     else
                         path = pathfinder.FindPathToNearestTile(currentTile, target.GridTile);
                 }

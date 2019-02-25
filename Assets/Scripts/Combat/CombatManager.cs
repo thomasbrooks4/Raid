@@ -111,10 +111,13 @@ public class CombatManager : MonoBehaviour {
             }
         }
 
-        // Change stance
+        // Change guard stance if warrior
         if (Input.GetKeyDown(KeyCode.S)) {
             foreach (Character character in selectedCharacters) {
-                character.ToggleAttackStance();
+                if (character.CharacterClass.Equals(CharacterClass.WARRIOR)) {
+                    Warrior warrior = (Warrior)character;
+                    warrior.ToggleGuardStance();
+                }
             }
         }
 
@@ -129,6 +132,16 @@ public class CombatManager : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.F)) {
             foreach (Character character in selectedCharacters) {
                 character.ToggleFocusLocked();
+            }
+        }
+
+        // Toggle guard if warrior
+        if (Input.GetKeyDown(KeyCode.G)) {
+            foreach (Character character in selectedCharacters) {
+                if (character.CharacterClass.Equals(CharacterClass.WARRIOR)) {
+                    Warrior warrior = (Warrior)character;
+                    warrior.ToggleGuard();
+                }
             }
         }
     }
