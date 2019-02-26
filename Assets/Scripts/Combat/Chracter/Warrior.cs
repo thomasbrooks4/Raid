@@ -50,15 +50,19 @@ public class Warrior : Character {
         if (target.CharacterClass.Equals(CharacterClass.WARRIOR)) {
             Warrior enemy = (Warrior)target;
 
-            // TODO: Cleanup for if enemy is facing
-            if (enemy.OnGuard) {
-                if (highAttack) {
-                    if (!enemy.HighGuard)
-                        enemy.TakeDamage(damage);
+            if (enemy.IsFacing(currentTile)) {
+                if (enemy.OnGuard) {
+                    if (highAttack) {
+                        if (!enemy.HighGuard)
+                            enemy.TakeDamage(damage);
+                    }
+                    else {
+                        if (enemy.HighGuard)
+                            enemy.TakeDamage(damage);
+                    }
                 }
                 else {
-                    if (enemy.HighGuard)
-                        enemy.TakeDamage(damage);
+                    enemy.TakeDamage(damage);
                 }
             }
             else {

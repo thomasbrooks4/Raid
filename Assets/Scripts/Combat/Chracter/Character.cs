@@ -19,7 +19,7 @@ public abstract class Character : MonoBehaviour {
     [SerializeField]
     private Vector2Int facingDirection;
     [SerializeField]
-    private GridTile currentTile;
+    protected GridTile currentTile;
     [SerializeField]
     protected Character target;
 
@@ -235,6 +235,7 @@ public abstract class Character : MonoBehaviour {
         }
     }
 
+    // TODO: Change rotate to targetDirection
     public void RotateLeft() {
         int x, y;
 
@@ -297,6 +298,16 @@ public abstract class Character : MonoBehaviour {
 
     public bool IsEnemy(Character character) {
         return friendly ? !character.Friendly : character.Friendly;
+    }
+
+    public bool IsFacing(GridTile targetTile) {
+        if (IsAdjacent(targetTile)) {
+            Vector2Int targetDirection = targetTile.GridPos - currentTile.GridPos;
+
+            return facingDirection.Equals(targetDirection);
+        }
+
+        return false;
     }
 
     #region Helper Methods
