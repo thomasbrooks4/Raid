@@ -13,6 +13,7 @@ public class CombatManager : MonoBehaviour {
     private bool isPaused;
 
     public CombatGrid CombatGrid { get => combatGrid; set => combatGrid = value; }
+    public bool IsPaused { get => isPaused; set => isPaused = value; }
 
     void Start() {
         combatGrid = GetComponent<CombatGrid>();

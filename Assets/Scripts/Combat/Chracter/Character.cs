@@ -10,6 +10,7 @@ public abstract class Character : MonoBehaviour {
     private const float BASE_MOVE_SPEED = 0.5f;
     private const float BASE_ROTATE_SPEED = 0.2f;
 
+    private CombatManager combatManager;
     private SpriteRenderer spriteRenderer;
     private BoxCollider2D boxCollider;
     private Rigidbody2D rb2D;
@@ -72,6 +73,7 @@ public abstract class Character : MonoBehaviour {
     protected int Health { get => health; set => health = value; }
 
     public virtual void Start() {
+        combatManager = GameObject.FindWithTag("Combat Manager").GetComponent<CombatManager>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         boxCollider = GetComponent<BoxCollider2D>();
         rb2D = GetComponent<Rigidbody2D>();
@@ -101,7 +103,7 @@ public abstract class Character : MonoBehaviour {
             else
                 spriteRenderer.material.color = startColor;
 
-            if (isMoving)
+            if (isMoving || combatManager.IsPaused)
                 return;
 
             if (currentDirection != targetDirection) {
@@ -260,18 +262,10 @@ public abstract class Character : MonoBehaviour {
     }
 
     public void QueueLeftRotation() {
-        if (actionCooldown)
-            return;
-
-        StartCoroutine(ActionCooldown());
         targetDirection = RotateLeft(targetDirection);
     }
 
     public void QueueRightRotation() {
-        if (actionCooldown)
-            return;
-
-        StartCoroutine(ActionCooldown());
         targetDirection = RotateRight(targetDirection);
     }
 
