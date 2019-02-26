@@ -17,7 +17,9 @@ public abstract class Character : MonoBehaviour {
     [SerializeField]
     private List<GridTile> path = new List<GridTile>();
     [SerializeField]
-    private Vector2Int facingDirection;
+    private Vector2Int currentDirection;
+    [SerializeField]
+    private Vector2Int targetDirection;
     [SerializeField]
     protected GridTile currentTile;
     [SerializeField]
@@ -71,6 +73,12 @@ public abstract class Character : MonoBehaviour {
 
         startColor = spriteRenderer.material.color;
 
+        if (friendly)
+            currentDirection = new Vector2Int(1, 0);
+        else
+            currentDirection = new Vector2Int(-1, 0);
+        targetDirection = currentDirection;
+
         isAlive = true;
         isSelected = false;
         isMoving = false;
@@ -90,8 +98,11 @@ public abstract class Character : MonoBehaviour {
             if (isMoving)
                 return;
 
+            if (currentDirection != targetDirection) {
+                RotateTowardsTargetDirection();
+            }
             // TODO: Keep in mind that archer's should move only until ABLE to attack (typically)
-            if (path.Any())
+            else if (path.Any())
                 Move();
             else {
                 if (target != null) {
@@ -132,8 +143,13 @@ public abstract class Character : MonoBehaviour {
         if (nextTile.Character == null) {
             path.Remove(path.First());
 
-            if (!directionLocked)
-                facingDirection = nextTile.GridPos - currentTile.GridPos;
+            if (!IsFacing(nextTile)) {
+                targetDirection = nextTile.GridPos - currentTile.GridPos;
+
+                while (currentDirection != targetDirection) {
+                    RotateTowardsTargetDirection();
+                }
+            }
 
             StartCoroutine(Moving(nextTile));
 
@@ -167,7 +183,7 @@ public abstract class Character : MonoBehaviour {
         currentTile = targetTile;
 
         if (!path.Any() && target != null)
-            FaceTarget();
+            targetDirection = target.GridTile.GridPos - currentTile.GridPos;
 
         isMoving = false;
     }
@@ -177,10 +193,14 @@ public abstract class Character : MonoBehaviour {
     private void StartAttacking() {
         if (target.IsAlive) {
             // Check if facing target
-            if (currentTile.GridPos + facingDirection == target.GridTile.GridPos) {
-                if (!directionLocked)
-                    FaceTarget();
+            if (IsFacing(target.GridTile)) {
                 Attack();
+            }
+            else {
+                if (!directionLocked) {
+                    // TODO: Only works for adjacent targets
+                    targetDirection = target.GridTile.GridPos - currentTile.GridPos;
+                }
             }
         }
         else
@@ -235,37 +255,12 @@ public abstract class Character : MonoBehaviour {
         }
     }
 
-    // TODO: Change rotate to targetDirection
-    public void RotateLeft() {
-        int x, y;
-
-        if (facingDirection.x != -facingDirection.y)
-            x = facingDirection.x + -facingDirection.y;
-        else
-            x = -facingDirection.y;
-
-        if (facingDirection.y != facingDirection.x)
-            y = facingDirection.y + facingDirection.x;
-        else
-            y = facingDirection.x;
-
-        facingDirection = new Vector2Int(x, y);
+    public void QueueLeftRotation() {
+        targetDirection = RotateLeft(targetDirection);
     }
 
-    public void RotateRight() {
-        int x, y;
-
-        if (facingDirection.x != facingDirection.y)
-            x = facingDirection.x + facingDirection.y;
-        else
-            x = facingDirection.y;
-
-        if (facingDirection.y != -facingDirection.x)
-            y = facingDirection.y + -facingDirection.x;
-        else
-            y = -facingDirection.x;
-
-        facingDirection = new Vector2Int(x, y);
+    public void QueueRightRotation() {
+        targetDirection = RotateRight(targetDirection);
     }
 
     public void ToggleDirectionLocked() {
@@ -281,9 +276,9 @@ public abstract class Character : MonoBehaviour {
             return;
 
         if (friendly)
-            facingDirection = new Vector2Int(1, 0);
+            targetDirection = new Vector2Int(1, 0);
         else
-            facingDirection = new Vector2Int(-1, 0);
+            targetDirection = new Vector2Int(-1, 0);
     }
 
     public void TakeDamage(int damage) {
@@ -302,21 +297,75 @@ public abstract class Character : MonoBehaviour {
 
     public bool IsFacing(GridTile targetTile) {
         if (IsAdjacent(targetTile)) {
-            Vector2Int targetDirection = targetTile.GridPos - currentTile.GridPos;
+            Vector2Int direction = targetTile.GridPos - currentTile.GridPos;
 
-            return facingDirection.Equals(targetDirection);
+            return currentDirection == direction;
         }
 
         return false;
     }
 
     #region Helper Methods
-    // TODO: Get rounded direction based on target location
-    private void FaceTarget() {
-        Vector2Int newDirection = target.GridTile.GridPos - currentTile.GridPos;
+    private Vector2Int RotateLeft(Vector2Int direction) {
+        int x, y;
 
-        if (!directionLocked && IsDirection(newDirection)) {
-            facingDirection = newDirection;
+        if (direction.x != -direction.y)
+            x = direction.x + -direction.y;
+        else
+            x = -direction.y;
+
+        if (direction.y != direction.x)
+            y = direction.y + direction.x;
+        else
+            y = direction.x;
+
+        return new Vector2Int(x, y);
+    }
+
+    private Vector2Int RotateRight(Vector2Int direction) {
+        int x, y;
+
+        if (direction.x != direction.y)
+            x = direction.x + direction.y;
+        else
+            x = direction.y;
+
+        if (direction.y != -direction.x)
+            y = direction.y + -direction.x;
+        else
+            y = -direction.x;
+
+        return new Vector2Int(x, y);
+    }
+
+    private void RotateTowardsTargetDirection() {
+        // Find quickest direction to rotate
+        int leftCount = 0, rightCount = 0;
+
+        Vector2Int direction = currentDirection;
+        while (direction != targetDirection) {
+            direction = RotateLeft(direction);
+            leftCount++;
+        }
+
+        direction = currentDirection;
+        while (direction != targetDirection) {
+            direction = RotateRight(direction);
+            rightCount++;
+        }
+
+        // Friendly characters default rotating right
+        if (friendly) {
+            if (leftCount < rightCount)
+                currentDirection = RotateLeft(currentDirection);
+            else
+                currentDirection = RotateRight(currentDirection);
+        }
+        else {
+            if (rightCount < leftCount)
+                currentDirection = RotateRight(currentDirection);
+            else
+                currentDirection = RotateLeft(currentDirection);
         }
     }
 

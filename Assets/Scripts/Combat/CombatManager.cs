@@ -86,14 +86,14 @@ public class CombatManager : MonoBehaviour {
         // Rotate left
         if (Input.GetKeyDown(KeyCode.E)) {
             foreach (Character character in selectedCharacters) {
-                character.RotateLeft();
+                character.QueueLeftRotation();
             }
         }
 
         // Rotate right
         if (Input.GetKeyDown(KeyCode.R)) {
             foreach (Character character in selectedCharacters) {
-                character.RotateRight();
+                character.QueueRightRotation();
             }
         }
 
