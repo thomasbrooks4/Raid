@@ -5,8 +5,9 @@ using UnityEngine;
 
 public abstract class Character : MonoBehaviour {
 
-    private const float BASE_MOVE_SPEED = 0.5f;
     private const float BASE_ATTACK_SPEED = 3f;
+    private const float BASE_MOVE_SPEED = 0.5f;
+    private const float BASE_ROTATE_SPEED = 0.2f;
 
     private SpriteRenderer spriteRenderer;
     private BoxCollider2D boxCollider;
@@ -35,6 +36,8 @@ public abstract class Character : MonoBehaviour {
     protected bool isMoving;
     [SerializeField]
     protected bool attackCooldown;
+    [SerializeField]
+    protected bool rotationCooldown;
     [SerializeField]
     protected bool highAttack;
     [SerializeField]
@@ -106,10 +109,8 @@ public abstract class Character : MonoBehaviour {
                 Move();
             else {
                 if (target != null) {
-                    if (WithinAttackRange(target.GridTile)) {
-                        if (!attackCooldown)
-                            StartAttacking();
-                    }
+                    if (WithinAttackRange(target.GridTile))
+                        StartAttacking();
                     else
                         path = pathfinder.FindPathToNearestTile(currentTile, target.GridTile);
                 }
@@ -141,16 +142,13 @@ public abstract class Character : MonoBehaviour {
         }
 
         if (nextTile.Character == null) {
-            path.Remove(path.First());
-
             if (!IsFacing(nextTile)) {
                 targetDirection = nextTile.GridPos - currentTile.GridPos;
 
-                while (currentDirection != targetDirection) {
-                    RotateTowardsTargetDirection();
-                }
+                return false;
             }
 
+            path.Remove(path.First());
             StartCoroutine(Moving(nextTile));
 
             return true;
@@ -191,6 +189,9 @@ public abstract class Character : MonoBehaviour {
 
     #region Attacking
     private void StartAttacking() {
+        if (attackCooldown)
+            return;
+
         if (target.IsAlive) {
             // Check if facing target
             if (IsFacing(target.GridTile)) {
@@ -339,6 +340,9 @@ public abstract class Character : MonoBehaviour {
     }
 
     private void RotateTowardsTargetDirection() {
+        if (rotationCooldown)
+            return;
+
         // Find quickest direction to rotate
         int leftCount = 0, rightCount = 0;
 
@@ -354,6 +358,8 @@ public abstract class Character : MonoBehaviour {
             rightCount++;
         }
 
+        StartCoroutine(RotateCooldown());
+
         // Friendly characters default rotating right
         if (friendly) {
             if (leftCount < rightCount)
@@ -367,6 +373,19 @@ public abstract class Character : MonoBehaviour {
             else
                 currentDirection = RotateLeft(currentDirection);
         }
+    }
+
+    private IEnumerator RotateCooldown() {
+        rotationCooldown = true;
+
+        float cooldownTime = BASE_ROTATE_SPEED * speed;
+
+        while (cooldownTime > 0f) {
+            cooldownTime -= Time.deltaTime;
+            yield return null;
+        }
+
+        rotationCooldown = false;
     }
 
     private bool WithinAttackRange(GridTile tile) {
