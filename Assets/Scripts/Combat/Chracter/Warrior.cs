@@ -6,6 +6,7 @@ public class Warrior : Character {
     private const int DEFAULT_DAMAGE = 35;
     private const float DEFAULT_SPEED = 0.9f;
     private const int DEFAULT_ATTACK_RANGE = 1;
+
     private const float GUARD_SPEED = 0.5f;
     private const float COOLDOWN = 0.2f;
 
@@ -72,11 +73,21 @@ public class Warrior : Character {
     }
 
     public override void ToggleAttackStance() {
+        if (actionCooldown)
+            return;
+
+        StartCoroutine(ActionCooldown());
+
         if (!onGuard)
             highAttack = !highAttack;
     }
 
     public void ToggleGuard() {
+        if (actionCooldown)
+            return;
+
+        StartCoroutine(ActionCooldown());
+
         onGuard = !onGuard;
         highAttack = false;
 
@@ -87,6 +98,10 @@ public class Warrior : Character {
     }
 
     public void ToggleGuardStance() {
+        if (actionCooldown)
+            return;
+
+        StartCoroutine(ActionCooldown());
         if (onGuard)
             highGuard = !highGuard;
     }

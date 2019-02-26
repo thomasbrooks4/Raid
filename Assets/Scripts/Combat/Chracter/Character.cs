@@ -5,6 +5,7 @@ using UnityEngine;
 
 public abstract class Character : MonoBehaviour {
 
+    private const float BASE_ACTION_SPEED = 0.75f;
     private const float BASE_ATTACK_SPEED = 3f;
     private const float BASE_MOVE_SPEED = 0.5f;
     private const float BASE_ROTATE_SPEED = 0.2f;
@@ -34,6 +35,8 @@ public abstract class Character : MonoBehaviour {
     protected bool isSelected;
     [SerializeField]
     protected bool isMoving;
+    [SerializeField]
+    protected bool actionCooldown;
     [SerializeField]
     protected bool attackCooldown;
     [SerializeField]
@@ -257,10 +260,18 @@ public abstract class Character : MonoBehaviour {
     }
 
     public void QueueLeftRotation() {
+        if (actionCooldown)
+            return;
+
+        StartCoroutine(ActionCooldown());
         targetDirection = RotateLeft(targetDirection);
     }
 
     public void QueueRightRotation() {
+        if (actionCooldown)
+            return;
+
+        StartCoroutine(ActionCooldown());
         targetDirection = RotateRight(targetDirection);
     }
 
@@ -358,7 +369,7 @@ public abstract class Character : MonoBehaviour {
             rightCount++;
         }
 
-        StartCoroutine(RotateCooldown());
+        StartCoroutine(RotatationCooldown());
 
         // Friendly characters default rotating right
         if (friendly) {
@@ -375,7 +386,7 @@ public abstract class Character : MonoBehaviour {
         }
     }
 
-    private IEnumerator RotateCooldown() {
+    private IEnumerator RotatationCooldown() {
         rotationCooldown = true;
 
         float cooldownTime = BASE_ROTATE_SPEED * speed;
@@ -386,6 +397,19 @@ public abstract class Character : MonoBehaviour {
         }
 
         rotationCooldown = false;
+    }
+
+    protected IEnumerator ActionCooldown() {
+        actionCooldown = true;
+
+        float cooldownTime = BASE_ACTION_SPEED * speed;
+
+        while (cooldownTime > 0f) {
+            cooldownTime -= Time.deltaTime;
+            yield return null;
+        }
+
+        actionCooldown = false;
     }
 
     private bool WithinAttackRange(GridTile tile) {
