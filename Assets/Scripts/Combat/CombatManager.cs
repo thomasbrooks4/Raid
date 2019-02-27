@@ -145,6 +145,13 @@ public class CombatManager : MonoBehaviour {
                 }
             }
         }
+
+		// Clear path
+		if (Input.GetKeyDown(KeyCode.C)) {
+			foreach (Character character in selectedCharacters) {
+				character.Path.Clear();
+			}
+		}
     }
 
     private void InitializeCombatScene() {
