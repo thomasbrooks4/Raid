@@ -17,6 +17,7 @@ public abstract class Character : MonoBehaviour {
     private Pathfinder pathfinder;
     private Color startColor;
 
+	private Vector2Int startPosition;
     [SerializeField]
     private List<GridTile> path = new List<GridTile>();
     [SerializeField]
@@ -34,9 +35,9 @@ public abstract class Character : MonoBehaviour {
     protected bool isAlive;
     [SerializeField]
     protected bool isSelected;
-    [SerializeField]
-    protected bool isMoving;
-    [SerializeField]
+	[SerializeField]
+	protected bool isMoving;
+	[SerializeField]
     protected bool actionCooldown;
     [SerializeField]
     protected bool attackCooldown;
@@ -55,24 +56,27 @@ public abstract class Character : MonoBehaviour {
     [SerializeField]
     protected int health;
     protected int damage;
-    protected float speed;
-    protected int attackRange;
+	protected float speed;
+	protected int attackRange;
     protected float cooldown;
 
-    public List<GridTile> Path { get => path; set => path = value; }
+	public Vector2Int StartPosition { get => startPosition; set => startPosition = value; }
+	public List<GridTile> Path { get => path; set => path = value; }
     public GridTile GridTile { get => currentTile; set => currentTile = value; }
     public Character Target { get => target; set => target = value; }
 
     public bool Friendly { get => friendly; set => friendly = value; }
     public bool IsAlive { get => isAlive; set => isAlive = value; }
     public bool IsSelected { get => isSelected; set => isSelected = value; }
-    public bool HighAttack { get => highAttack; set => highAttack = value; }
+	public bool IsMoving { get => isMoving; set => isMoving = value; }
+	public bool HighAttack { get => highAttack; set => highAttack = value; }
 
     public string CharacterName { get => characterName; set => characterName = value; }
     public CharacterClass CharacterClass { get => characterClass; set => characterClass = value; }
     protected int Health { get => health; set => health = value; }
+	public float Speed { get => speed; set => speed = value; }
 
-    public virtual void Start() {
+	public virtual void Start() {
         combatManager = GameObject.FindWithTag("Combat Manager").GetComponent<CombatManager>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         boxCollider = GetComponent<BoxCollider2D>();
@@ -98,11 +102,6 @@ public abstract class Character : MonoBehaviour {
 
     public virtual void Update() {
         if (isAlive) {
-            if (isSelected)
-                spriteRenderer.material.color = Color.yellow;
-            else
-                spriteRenderer.material.color = startColor;
-
             if (isMoving || combatManager.IsPaused)
                 return;
 
@@ -172,7 +171,7 @@ public abstract class Character : MonoBehaviour {
         float sqrRemainingDistance = (GetTransfromPostionVector2() - targetTile.GridPos).sqrMagnitude;
 
         while (sqrRemainingDistance > float.Epsilon) {
-            float inverseMoveTime = (1f / BASE_MOVE_SPEED) * speed;
+            float inverseMoveTime = (1f / BASE_MOVE_SPEED) * Speed;
 
             Vector2 newPosition = Vector2.MoveTowards(transform.position, targetTile.GridPos, inverseMoveTime * Time.deltaTime);
             transform.position = newPosition;
@@ -187,6 +186,10 @@ public abstract class Character : MonoBehaviour {
 
         if (!path.Any() && target != null)
             targetDirection = target.GridTile.GridPos - currentTile.GridPos;
+
+		if (!path.Any() && combatManager.SetupPhase) {
+			ResetDirection();
+		}
 
         isMoving = false;
     }
@@ -231,7 +234,7 @@ public abstract class Character : MonoBehaviour {
     private IEnumerator AttackCooldown() {
         attackCooldown = true;
 
-        float cooldownTime = BASE_ATTACK_SPEED * speed;
+        float cooldownTime = BASE_ATTACK_SPEED * Speed;
 
         while (cooldownTime > 0f) {
             cooldownTime -= Time.deltaTime;
@@ -241,9 +244,27 @@ public abstract class Character : MonoBehaviour {
         attackCooldown = false;
     }
     #endregion
+	
+	public void Select() {
+		isSelected = true;
+
+		spriteRenderer.material.color = Color.yellow;
+	}
+
+	public void Deselect() {
+		isSelected = false;
+
+		spriteRenderer.material.color = startColor;
+	}
 
     public void SetTargetTile(GridTile targetTile) {
-        if (targetTile.Character != null) {
+		if (combatManager.SetupPhase) {
+			if (targetTile.Character == null && targetTile.GridPos.x <= 1) {
+				// TODO: Keep in mind that other characters might be blocking path
+				path = pathfinder.FindPath(currentTile, targetTile);
+			}
+		}
+		else if (targetTile.Character != null) {
             if (IsEnemy(targetTile.Character)) {
                 if (targetTile.Character.IsAlive)
                     target = targetTile.Character;
@@ -269,6 +290,10 @@ public abstract class Character : MonoBehaviour {
         targetDirection = RotateRight(targetDirection);
     }
 
+	public void ToggleSelected() {
+
+	}
+
     public void ToggleDirectionLocked() {
         directionLocked = !directionLocked;
     }
@@ -292,8 +317,9 @@ public abstract class Character : MonoBehaviour {
 
         if (health <= 0) {
             health = 0;
+
             isAlive = false;
-            spriteRenderer.material.color = startColor;
+			Deselect();
         }
     }
 
@@ -309,10 +335,14 @@ public abstract class Character : MonoBehaviour {
         }
 
         return false;
-    }
+	}
 
-    #region Helper Methods
-    private Vector2Int RotateLeft(Vector2Int direction) {
+	public Vector2 GetTransfromPostionVector2() {
+		return new Vector2(transform.position.x, transform.position.y);
+	}
+
+	#region Helper Methods
+	private Vector2Int RotateLeft(Vector2Int direction) {
         int x, y;
 
         if (direction.x != -direction.y)
@@ -383,7 +413,7 @@ public abstract class Character : MonoBehaviour {
     private IEnumerator RotatationCooldown() {
         rotationCooldown = true;
 
-        float cooldownTime = BASE_ROTATE_SPEED * speed;
+        float cooldownTime = BASE_ROTATE_SPEED * Speed;
 
         while (cooldownTime > 0f) {
             cooldownTime -= Time.deltaTime;
@@ -396,7 +426,7 @@ public abstract class Character : MonoBehaviour {
     protected IEnumerator ActionCooldown() {
         actionCooldown = true;
 
-        float cooldownTime = BASE_ACTION_SPEED * speed;
+        float cooldownTime = BASE_ACTION_SPEED * Speed;
 
         while (cooldownTime > 0f) {
             cooldownTime -= Time.deltaTime;
@@ -417,10 +447,6 @@ public abstract class Character : MonoBehaviour {
 
     private bool IsDirection(Vector2Int direction) {
         return (-1 <= direction.x && direction.x <= 1 && -1 <= direction.y && direction.y <= 1);
-    }
-
-    private Vector2 GetTransfromPostionVector2() {
-        return new Vector2(transform.position.x, transform.position.y);
     }
     #endregion
 }

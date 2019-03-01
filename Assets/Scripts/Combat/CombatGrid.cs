@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class CombatGrid : MonoBehaviour {
+	
+	private const int ENEMY_CHARACTER_START_X = 17;
 
 	private Transform gridTransform;
 	public GameObject gridTilePrefab;
@@ -9,18 +12,20 @@ public class CombatGrid : MonoBehaviour {
 	
 	public int cols;
 	public int rows;
-	private GridTile[,] gridTiles;
-	private bool characterSelected;
-	
-	public GridTile[,] GridTiles { get => gridTiles; }
-	public bool CharacterSelected { get => characterSelected; set => characterSelected = value; }
 
-	public void Initialize(SaveData playerSave) {
-		gridTiles = new GridTile[cols, rows];
-		characterSelected = false;
+	public GridTile[,] GridTiles { get; private set; }
+	public bool CharacterSelected { get; set; }
+
+	public void Initialize(int enemyAmount) {
+		GridTiles = new GridTile[cols, rows];
+		CharacterSelected = false;
 
 		GenerateGrid();
-		PopulatePlayerClan(playerSave);
+		SetupPlayerParty();
+		SetupEnemyParty(enemyAmount);
+
+		MoveCharactersToStartingPositions();
+		// TODO: Consider wait until all characters reached thier start positions
 	}
 
 	public List<GridTile> GetSurroundingTiles(GridTile tile) {
@@ -35,7 +40,7 @@ public class CombatGrid : MonoBehaviour {
 				int checkY = tile.GridPos.y + y;
 
 				if (0 <= checkX && checkX < cols && 0 <= checkY && checkY < rows)
-					surrounding.Add(gridTiles[checkX, checkY]);
+					surrounding.Add(GridTiles[checkX, checkY]);
 			}
 		}
 
@@ -52,37 +57,113 @@ public class CombatGrid : MonoBehaviour {
 				tile.transform.SetParent(gridTransform);
 				tile.name = "(" + x + ", " + y + ") Grid Tile";
 
-				gridTiles[x, y] = tile.GetComponent<GridTile>();
-				gridTiles[x, y].Initialize(new Vector2Int(x, y), this);
+				GridTiles[x, y] = tile.GetComponent<GridTile>();
+				GridTiles[x, y].Initialize(new Vector2Int(x, y), this);
 			}
 		}
 	}
 
-	private void PopulatePlayerClan(SaveData playerSave) {
-		int xPos = 0;
+	private void SetupPlayerParty() {
+		System.Random random = new System.Random();
+		SaveData playerSave = GameManager.Instance.playerSave;
+		int countX = 0, countY = 0;
+		
 		for (int i = 0; i < playerSave.characterAmount; i++) {
 			GameObject characterObject;
-			// if (characterData.CharacterClass.Equals(Class.WARRIOR)) use once we add more classes
+			int startX, startY;
+
 			if (playerSave.characterPositions[i] != null) {
-				characterObject = Instantiate(warriorPrefab, new Vector3(playerSave.characterPositions[i][0], 
-					playerSave.characterPositions[i][1], 0f), Quaternion.identity) as GameObject;
-
-
-				Character character = characterObject.GetComponent<Character>();
-				character.GridTile = gridTiles[playerSave.characterPositions[i][0], playerSave.characterPositions[i][1]];
-                character.CharacterName = playerSave.characterNames[i];
-                characterObject.name = playerSave.characterNames[i];
-                gridTiles[playerSave.characterPositions[i][0], playerSave.characterPositions[i][1]].Character = character;
+				startX = playerSave.characterPositions[i][0];
+				startY = playerSave.characterPositions[i][1];
 			}
 			else {
-				characterObject = Instantiate(warriorPrefab, new Vector3(xPos, i, 0f), Quaternion.identity) as GameObject;
+				startX = countX;
+				startY = countY++;
 
-				Character character = characterObject.GetComponent<Character>();
-				character.GridTile = gridTiles[xPos, i];
-				character.CharacterName = playerSave.characterNames[i];
-                characterObject.name = playerSave.characterNames[i];
-				gridTiles[xPos, i].Character = character;
+				if (countY == rows) {
+					countX++;
+					countY = 0;
+				}
 			}
+
+			// if (playerSave.characterClasses[i].Equals(WARRIOR)) use once we add more classes
+			characterObject = Instantiate(warriorPrefab, 
+				new Vector3(random.Next(-4, -1), startY, 0f), Quaternion.identity) as GameObject;
+			characterObject.name = playerSave.characterNames[i];
+
+			Character character = characterObject.GetComponent<Character>();
+			character.StartPosition = new Vector2Int(startX, startY);
+			character.GridTile = GridTiles[startX, startY];
+			character.CharacterName = playerSave.characterNames[i];
+			character.CharacterClass = CharacterClass.WARRIOR;
+			character.Friendly = true;
+
+			GridTiles[startX, startY].Character = character;
 		}
 	}
+
+	private void SetupEnemyParty(int amount) {
+		// TODO: Pass in information to generate characters
+
+		System.Random random = new System.Random();
+		int countX = (cols - 1), countY = (rows - 1);
+
+		for (int i = 0; i < amount; i++) {
+			GameObject characterObject;
+			int startX, startY;
+
+			startX = countX;
+			startY = countY--;
+
+			if (countY < 0) {
+				countX--;
+				countY = (rows - 1);
+			}
+
+			// if (playerSave.characterClasses[i].Equals(WARRIOR)) use once we add more classes
+			characterObject = Instantiate(warriorPrefab,
+				new Vector3(random.Next(17, 20), startY, 0f), Quaternion.identity) as GameObject;
+			// TODO: Name generator
+			characterObject.name = "Enemy";
+
+			Character enemy = characterObject.GetComponent<Character>();
+			enemy.StartPosition = new Vector2Int(startX, startY);
+			enemy.GridTile = GridTiles[startX, startY];
+			enemy.CharacterName = "Enemy";
+			enemy.CharacterClass = CharacterClass.WARRIOR;
+			enemy.Friendly = false;
+
+			GridTiles[startX, startY].Character = enemy;
+		}
+	}
+
+	#region Move Characters
+	private void MoveCharactersToStartingPositions() {
+		GameObject[] characterObjects = GameObject.FindGameObjectsWithTag("Character");
+
+		foreach (GameObject characterObject in characterObjects) {
+			Character character = characterObject.GetComponent<Character>();
+			StartCoroutine(MoveCharacter(character));
+		}
+	}
+
+	private IEnumerator MoveCharacter(Character character) {
+		const float BASE_MOVE_SPEED = 0.5f;
+		character.IsMoving = true;
+
+		float sqrRemainingDistance = (character.GetTransfromPostionVector2() - character.StartPosition).sqrMagnitude;
+
+		while (sqrRemainingDistance > float.Epsilon) {
+			float inverseMoveTime = (1f / BASE_MOVE_SPEED) * character.Speed;
+
+			Vector2 newPosition = Vector2.MoveTowards(character.transform.position, character.StartPosition, inverseMoveTime * Time.deltaTime);
+			character.transform.position = newPosition;
+			sqrRemainingDistance = (character.GetTransfromPostionVector2() - character.StartPosition).sqrMagnitude;
+
+			yield return null;
+		}
+
+		character.IsMoving = false;
+	}
+	#endregion
 }

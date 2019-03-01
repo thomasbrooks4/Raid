@@ -4,166 +4,176 @@ using UnityEngine;
 
 public class CombatManager : MonoBehaviour {
 
+	// Temporary
+	private const int ENEMY_AMOUNT = 2;
+
     private const int LEFT_MOUSE_BUTTON = 0;
     private const int RIGHT_MOUSE_BUTTON = 1;
 
-    private CombatGrid combatGrid;
+	private List<Character> selectedCharacters = new List<Character>();
 
-    private List<Character> selectedCharacters = new List<Character>();
-    private bool isPaused;
+	public CombatGrid CombatGrid { get; set; }
+	public bool SetupPhase { get; set; }
+	public bool IsPaused { get; set; }
 
-    public CombatGrid CombatGrid { get => combatGrid; set => combatGrid = value; }
-    public bool IsPaused { get => isPaused; set => isPaused = value; }
+	void Start() {
+        CombatGrid = GetComponent<CombatGrid>();
 
-    void Start() {
-        combatGrid = GetComponent<CombatGrid>();
+		SetupPhase = true;
+		IsPaused = false;
 
-        InitializeCombatScene();
-    }
+		CombatGrid.Initialize(ENEMY_AMOUNT);
+	}
 
     // Update is called once per frame
     void Update() {
-        RemoveDeadSelectedCharacters();
+		// Selection
+		if (Input.GetMouseButtonDown(LEFT_MOUSE_BUTTON)) {
+			Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
 
-        // Pause combat
-        if (Input.GetKeyDown(KeyCode.Space)) {
-            TogglePause();
-        }
+			if (WithinGrid(mousePos)) {
+				GridTile tile = CombatGrid.GridTiles[mousePos.x, mousePos.y];
 
-        // Selection
-        if (Input.GetMouseButtonDown(LEFT_MOUSE_BUTTON)) {
-            Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+				if (tile.Character != null && tile.Character.Friendly && tile.Character.IsAlive) {
+					if (!Input.GetKey(KeyCode.LeftShift))
+						ClearSelectedCharacters();
 
-            if (WithinGrid(mousePos)) {
-                GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
+					selectedCharacters.Add(tile.Character);
+					tile.Character.Select();
+					CombatGrid.CharacterSelected = true;
+				}
+				else {
+					if (selectedCharacters.Any())
+						ClearSelectedCharacters();
+				}
+			}
+		}
+		// Movement
+		if (Input.GetMouseButtonDown(RIGHT_MOUSE_BUTTON) && !Input.GetKey(KeyCode.LeftShift)) {
+			if (selectedCharacters.Any()) {
+				Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
 
-                if (tile.Character != null && tile.Character.Friendly) {
-                    if (!Input.GetKey(KeyCode.LeftShift))
-                        ClearSelectedCharacters();
+				if (WithinGrid(mousePos)) {
+					GridTile tile = CombatGrid.GridTiles[mousePos.x, mousePos.y];
 
-                    selectedCharacters.Add(tile.Character);
-                    tile.Character.IsSelected = true;
-                    combatGrid.CharacterSelected = true;
-                }
-                else {
-                    if (selectedCharacters.Any())
-                        ClearSelectedCharacters();
-                }
-            }
-        }
+					foreach (Character selectedCharacter in selectedCharacters) {
+						selectedCharacter.SetTargetTile(tile);
+					}
+				}
+			}
+		}
 
-        // Movement
-        if (Input.GetMouseButtonDown(RIGHT_MOUSE_BUTTON) && !Input.GetKey(KeyCode.LeftShift)) {
-            if (selectedCharacters.Any()) {
-                Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+		if (SetupPhase) {
+			// Start combat
+			if (Input.GetKeyDown(KeyCode.Return)) {
+				// TODO: Start combat
+				SetupPhase = false;
+			}
 
-                if (WithinGrid(mousePos)) {
-                    GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
+			if (Input.GetKeyDown(KeyCode.Slash)) {
+				// Save character positions
+			}
+		}
+		else {
+			RemoveDeadSelectedCharacters();
 
-                    foreach (Character selectedCharacter in selectedCharacters) {
-                        selectedCharacter.SetTargetTile(tile);
-                    }
-                }
-            }
-        }
+			// Pause combat
+			if (Input.GetKeyDown(KeyCode.Space)) {
+				TogglePause();
+			}
 
-        // Create paths
-        if (Input.GetMouseButton(RIGHT_MOUSE_BUTTON) && Input.GetKey(KeyCode.LeftShift)) {
-            if (selectedCharacters.Any()) {
-                Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+			// Create paths
+			if (Input.GetMouseButton(RIGHT_MOUSE_BUTTON) && Input.GetKey(KeyCode.LeftShift)) {
+				if (selectedCharacters.Any()) {
+					Vector3Int mousePos = Vector3Int.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
 
-                if (WithinGrid(mousePos)) {
-                    GridTile tile = combatGrid.GridTiles[mousePos.x, mousePos.y];
+					if (WithinGrid(mousePos)) {
+						GridTile tile = CombatGrid.GridTiles[mousePos.x, mousePos.y];
 
-                    foreach (Character selectedCharacter in selectedCharacters) {
-                        if (!selectedCharacter.Path.Contains(tile)) {
-                            selectedCharacter.Path.Add(tile);
-                        }
-                    }
-                }
-            }
-        }
+						foreach (Character selectedCharacter in selectedCharacters) {
+							if (!selectedCharacter.Path.Contains(tile)) {
+								selectedCharacter.Path.Add(tile);
+							}
+						}
+					}
+				}
+			}
 
-        // Rotate left
-        if (Input.GetKeyDown(KeyCode.E)) {
-            foreach (Character character in selectedCharacters) {
-                character.QueueLeftRotation();
-            }
-        }
+			// Rotate left
+			if (Input.GetKeyDown(KeyCode.E)) {
+				foreach (Character character in selectedCharacters) {
+					character.QueueLeftRotation();
+				}
+			}
 
-        // Rotate right
-        if (Input.GetKeyDown(KeyCode.R)) {
-            foreach (Character character in selectedCharacters) {
-                character.QueueRightRotation();
-            }
-        }
+			// Rotate right
+			if (Input.GetKeyDown(KeyCode.R)) {
+				foreach (Character character in selectedCharacters) {
+					character.QueueRightRotation();
+				}
+			}
 
-        // Reset direction
-        if (Input.GetKeyDown(KeyCode.T)) {
-            foreach (Character character in selectedCharacters) {
-                character.ResetDirection();
-            }
-        }
+			// Reset direction
+			if (Input.GetKeyDown(KeyCode.T)) {
+				foreach (Character character in selectedCharacters) {
+					character.ResetDirection();
+				}
+			}
 
-        // Toggle attack stance
-        if (Input.GetKeyDown(KeyCode.A)) {
-            foreach (Character character in selectedCharacters) {
-                character.ToggleAttackStance();
-            }
-        }
+			// Toggle attack stance
+			if (Input.GetKeyDown(KeyCode.A)) {
+				foreach (Character character in selectedCharacters) {
+					character.ToggleAttackStance();
+				}
+			}
 
-        // Change guard stance if warrior
-        if (Input.GetKeyDown(KeyCode.S)) {
-            foreach (Character character in selectedCharacters) {
-                if (character.CharacterClass.Equals(CharacterClass.WARRIOR)) {
-                    Warrior warrior = (Warrior)character;
-                    warrior.ToggleGuardStance();
-                }
-            }
-        }
+			// Change guard stance if warrior
+			if (Input.GetKeyDown(KeyCode.S)) {
+				foreach (Character character in selectedCharacters) {
+					if (character.CharacterClass.Equals(CharacterClass.WARRIOR)) {
+						Warrior warrior = (Warrior)character;
+						warrior.ToggleGuardStance();
+					}
+				}
+			}
 
-        // Toggle direction lock
-        if (Input.GetKeyDown(KeyCode.D)) {
-            foreach (Character character in selectedCharacters) {
-                character.ToggleDirectionLocked();
-            }
-        }
+			// Toggle direction lock
+			if (Input.GetKeyDown(KeyCode.D)) {
+				foreach (Character character in selectedCharacters) {
+					character.ToggleDirectionLocked();
+				}
+			}
 
-        // Toggle focus lock
-        if (Input.GetKeyDown(KeyCode.F)) {
-            foreach (Character character in selectedCharacters) {
-                character.ToggleFocusLocked();
-            }
-        }
+			// Toggle focus lock
+			if (Input.GetKeyDown(KeyCode.F)) {
+				foreach (Character character in selectedCharacters) {
+					character.ToggleFocusLocked();
+				}
+			}
 
-        // Toggle guard if warrior
-        if (Input.GetKeyDown(KeyCode.G)) {
-            foreach (Character character in selectedCharacters) {
-                if (character.CharacterClass.Equals(CharacterClass.WARRIOR)) {
-                    Warrior warrior = (Warrior)character;
-                    warrior.ToggleGuard();
-                }
-            }
-        }
+			// Toggle guard if warrior
+			if (Input.GetKeyDown(KeyCode.G)) {
+				foreach (Character character in selectedCharacters) {
+					if (character.CharacterClass.Equals(CharacterClass.WARRIOR)) {
+						Warrior warrior = (Warrior)character;
+						warrior.ToggleGuard();
+					}
+				}
+			}
 
-		// Clear path
-		if (Input.GetKeyDown(KeyCode.C)) {
-			foreach (Character character in selectedCharacters) {
-				character.Path.Clear();
+			// Clear path
+			if (Input.GetKeyDown(KeyCode.C)) {
+				foreach (Character character in selectedCharacters) {
+					character.Path.Clear();
+				}
 			}
 		}
     }
 
-    private void InitializeCombatScene() {
-        combatGrid.Initialize(GameManager.Instance.playerSave);
-
-        isPaused = false;
-    }
-
     private void TogglePause() {
-        isPaused = !isPaused;
+        IsPaused = !IsPaused;
 
-        if (isPaused)
+        if (IsPaused)
             Time.timeScale = 0f;
         else
             Time.timeScale = 1f;
@@ -171,9 +181,9 @@ public class CombatManager : MonoBehaviour {
 
     private void ClearSelectedCharacters() {
         foreach (Character character in selectedCharacters)
-            character.IsSelected = false;
+            character.Deselect();
 
-        combatGrid.CharacterSelected = false;
+        CombatGrid.CharacterSelected = false;
         selectedCharacters.Clear();
     }
 
@@ -182,8 +192,8 @@ public class CombatManager : MonoBehaviour {
     }
 
     private bool WithinGrid(Vector3Int position) {
-        return 0 <= position.x && position.x <= (combatGrid.cols - 1)
-                && 0 <= position.y && position.y <= (combatGrid.rows - 1);
+        return 0 <= position.x && position.x <= (CombatGrid.cols - 1)
+                && 0 <= position.y && position.y <= (CombatGrid.rows - 1);
     }
 
 }

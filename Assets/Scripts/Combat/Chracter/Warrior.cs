@@ -26,7 +26,7 @@ public class Warrior : Character {
         maxHealth = DEFAULT_HEALTH;
         health = maxHealth;
         damage = DEFAULT_DAMAGE;
-        speed = DEFAULT_SPEED;
+        Speed = DEFAULT_SPEED;
         attackRange = DEFAULT_ATTACK_RANGE;
         cooldown = COOLDOWN;
 
@@ -92,9 +92,9 @@ public class Warrior : Character {
         highAttack = false;
 
         if (onGuard)
-            speed = GUARD_SPEED;
+            Speed = GUARD_SPEED;
         else
-            speed = DEFAULT_SPEED;
+            Speed = DEFAULT_SPEED;
     }
 
     public void ToggleGuardStance() {

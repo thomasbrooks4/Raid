@@ -8,7 +8,6 @@ TagManager:
   - Grid Tile
   - Combat Manager
   - Character
-  - Friendly
   layers:
   - Default
   - TransparentFX
