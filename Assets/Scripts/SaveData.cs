@@ -10,40 +10,16 @@ public class SaveData {
 	public string[] characterNames;
 	public string[] characterClasses;
 
-	public SaveData(int characterAmount, int[][] characterPositions, string[] characterNames, string[] characterClasses) {
-		this.characterAmount = characterAmount;
-		this.characterPositions = characterPositions;
-		this.characterNames = characterNames;
-		this.characterClasses = characterClasses;
-	}
+    public SaveData(List<CharacterData> characterData) {
+        characterAmount = characterData.Count;
+        characterPositions = new int[characterData.Count()][];
+        characterNames = new string[characterData.Count()];
+        characterClasses = new string[characterData.Count()];
 
-	public SaveData(int characterAmount, string[] characterNames, string[] characterClasses) {
-		this.characterAmount = characterAmount;
-		this.characterPositions = new int[characterAmount][];
-		this.characterNames = characterNames;
-		this.characterClasses = characterClasses;
-	}
-
-	public SaveData(List<Character> characters) {
-		characterAmount = characters.Count();
-		characterPositions = new int[characters.Count()][];
-		characterNames = new string[characters.Count()];
-		characterClasses = new string[characters.Count()];
-
-		
-		for (int i = 0; i < characters.Count(); i++) {
-			if (characters[i].StartPosition != null)
-				characterPositions[i] = new int[] { characters[i].StartPosition.x, characters[i].StartPosition.y };
-			characterNames[i] = characters[i].CharacterName;
-			characterClasses[i] = characters[i].CharacterClass.ToString();
-		}
-	}
-
-	public void SetCharacterPosition(string characterName, int x, int y) {
-		int index = Array.IndexOf(characterNames, characterName);
-
-		if (index >= 0) {
-			characterPositions[index] = new int[] { x, y };
-		}
-	}
+        for (int i = 0; i < characterData.Count; i++) {
+            characterNames[i] = characterData[i].CharacterName;
+            characterClasses[i] = characterData[i].CharacterClass;
+            characterPositions[i] = characterData[i].CharacterPosition;
+        }
+    }
 }

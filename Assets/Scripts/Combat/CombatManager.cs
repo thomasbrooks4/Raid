@@ -4,9 +4,6 @@ using UnityEngine;
 
 public class CombatManager : MonoBehaviour {
 
-	// Temporary
-	private const int ENEMY_AMOUNT = 2;
-
     private const int LEFT_MOUSE_BUTTON = 0;
     private const int RIGHT_MOUSE_BUTTON = 1;
 
@@ -18,11 +15,12 @@ public class CombatManager : MonoBehaviour {
 
 	void Start() {
         CombatGrid = GetComponent<CombatGrid>();
+        GameManager.Instance.PlayerSave = SaveManager.LoadSave();
 
 		SetupPhase = true;
 		IsPaused = false;
 
-		CombatGrid.Initialize(ENEMY_AMOUNT);
+		CombatGrid.Initialize();
 	}
 
     // Update is called once per frame

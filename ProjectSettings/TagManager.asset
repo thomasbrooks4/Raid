@@ -8,6 +8,10 @@ TagManager:
   - Grid Tile
   - Combat Manager
   - Character
+  - Panel
+  - Dropdown
+  - Input
+  - Text
   layers:
   - Default
   - TransparentFX

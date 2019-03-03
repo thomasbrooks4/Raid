@@ -16,13 +16,13 @@ public class CombatGrid : MonoBehaviour {
 	public GridTile[,] GridTiles { get; private set; }
 	public bool CharacterSelected { get; set; }
 
-	public void Initialize(int enemyAmount) {
+	public void Initialize() {
 		GridTiles = new GridTile[cols, rows];
 		CharacterSelected = false;
 
 		GenerateGrid();
 		SetupPlayerParty();
-		SetupEnemyParty(enemyAmount);
+		SetupEnemyParty();
 
 		MoveCharactersToStartingPositions();
 		// TODO: Consider wait until all characters reached thier start positions
@@ -65,14 +65,14 @@ public class CombatGrid : MonoBehaviour {
 
 	private void SetupPlayerParty() {
 		System.Random random = new System.Random();
-		SaveData playerSave = GameManager.Instance.playerSave;
+		SaveData playerSave = GameManager.Instance.PlayerSave;
 		int countX = 0, countY = 0;
 		
 		for (int i = 0; i < playerSave.characterAmount; i++) {
 			GameObject characterObject;
 			int startX, startY;
 
-			if (playerSave.characterPositions[i] != null) {
+			if (!(playerSave.characterPositions[i][0] == 0 && playerSave.characterPositions[i][1] == 0)) {
 				startX = playerSave.characterPositions[i][0];
 				startY = playerSave.characterPositions[i][1];
 			}
@@ -102,13 +102,14 @@ public class CombatGrid : MonoBehaviour {
 		}
 	}
 
-	private void SetupEnemyParty(int amount) {
-		// TODO: Pass in information to generate characters
+	private void SetupEnemyParty() {
+        // TODO: Pass in information to generate characters
+        int enemyAmount = GameManager.Instance.EnemyAmount;
 
-		System.Random random = new System.Random();
+        System.Random random = new System.Random();
 		int countX = (cols - 1), countY = (rows - 1);
 
-		for (int i = 0; i < amount; i++) {
+		for (int i = 0; i < enemyAmount; i++) {
 			GameObject characterObject;
 			int startX, startY;
 
@@ -124,12 +125,13 @@ public class CombatGrid : MonoBehaviour {
 			characterObject = Instantiate(warriorPrefab,
 				new Vector3(random.Next(17, 20), startY, 0f), Quaternion.identity) as GameObject;
 			// TODO: Name generator
-			characterObject.name = "Enemy";
+			characterObject.name = "Enemy " + i;
+            characterObject.AddComponent<WarriorAI>();
 
 			Character enemy = characterObject.GetComponent<Character>();
 			enemy.StartPosition = new Vector2Int(startX, startY);
 			enemy.GridTile = GridTiles[startX, startY];
-			enemy.CharacterName = "Enemy";
+			enemy.CharacterName = "Enemy "  + i;
 			enemy.CharacterClass = CharacterClass.WARRIOR;
 			enemy.Friendly = false;
 

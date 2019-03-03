@@ -6,12 +6,9 @@ public static class SaveManager {
 	
 	private static readonly string SAVE_DATA_PATH = Application.persistentDataPath + "/raid-dev.save";
 
-	public static void SaveGame() {
+	public static void SaveGame(SaveData saveData) {
 		BinaryFormatter formatter = new BinaryFormatter();
 		FileStream stream = new FileStream(SAVE_DATA_PATH, FileMode.Create);
-
-        // SaveData playerSaveData = GameManager.Instance.playerSave;
-        SaveData saveData = CreateSaveData();
 
 		formatter.Serialize(stream, saveData);
 		stream.Close();
@@ -32,16 +29,4 @@ public static class SaveManager {
 			return null;
 		}
 	}
-
-    // TEST PURPOSES
-    private static SaveData CreateSaveData() {
-        const int characterAmount = 2;
-        int[][] characterPositions = new int[characterAmount][];
-        characterPositions[0] = new int[] { 0, 0 };
-        characterPositions[1] = new int[] { 1, 4 };
-        string[] characterNames = { "thomas", "brianna" };
-        string[] characterClasses = { "WARRIOR", "WARRIOR" };
-
-        return new SaveData(characterAmount, characterPositions, characterNames, characterClasses);
-    }
 }
