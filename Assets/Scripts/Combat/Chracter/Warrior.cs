@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class Warrior : Character {
 
@@ -67,6 +68,10 @@ public class Warrior : Character {
                 }
             }
             else {
+                // TODO: Add supporting methods to make this not as gross
+                List<GridTile> surroudingEnemyTiles = enemy.GridTile.Grid.GetSurroundingTiles(enemy.GridTile);
+
+                // if adjacent enemy is 
                 enemy.TakeDamage(damage);
             }
         }

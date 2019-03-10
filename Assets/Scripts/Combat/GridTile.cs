@@ -6,29 +6,22 @@ public class GridTile : MonoBehaviour {
 	private Color startColor;
 	private Color highlightColor;
 
-    private CombatGrid grid;
-    private Vector2Int gridPos;
-	private Character character;
+    public CombatGrid Grid { get; private set; }
+    public Vector2Int GridPos { get; private set; }
+    public Character Character { get; set; }
 
-	public Vector2Int GridPos { get => gridPos; }
-	public Character Character { get => character; set => character = value; }
+    #region Pathfinding
 
-	#region Pathfinding
-	private int g;
-	private int h;
+    public int G { get; set; }
+    public int H { get; set; }
+    public int F { get => G + H; }
 
-	private GridTile parent;
+    public GridTile Parent { get; set; }
+    #endregion
 
-	public int G { get => g; set => g = value; }
-	public int H { get => h; set => h = value; }
-	public int F { get => g + h; }
-
-	public GridTile Parent { get => parent; set => parent = value; }
-	#endregion
-
-	public void Initialize(Vector2Int gridPos, CombatGrid grid) {
-		this.gridPos = gridPos;
-		this.grid = grid;
+    public void Initialize(Vector2Int gridPos, CombatGrid grid) {
+		this.GridPos = gridPos;
+		this.Grid = grid;
 	}
 
 	void Start() {
@@ -38,7 +31,7 @@ public class GridTile : MonoBehaviour {
 	}
 
 	void OnMouseOver() {
-		if (character == null && grid.CharacterSelected)
+		if (Character == null && Grid.CharacterSelected)
 			spriteRenderer.material.color = highlightColor;
 		else
 			spriteRenderer.material.color = startColor;
@@ -55,12 +48,12 @@ public class GridTile : MonoBehaviour {
 		}
 		else {
 			GridTile t = (GridTile)other;
-			return (gridPos.x == t.GridPos.x) && (gridPos.y == t.GridPos.y);
+			return (GridPos.x == t.GridPos.x) && (GridPos.y == t.GridPos.y);
 		}
 	}
 
     public override int GetHashCode() {
-        return gridPos.x ^ gridPos.y;
+        return GridPos.x ^ GridPos.y;
     }
     #endregion
 }

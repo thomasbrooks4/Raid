@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class CombatGrid : MonoBehaviour {
-	
-	private const int ENEMY_CHARACTER_START_X = 17;
 
 	private Transform gridTransform;
 	public GameObject gridTilePrefab;

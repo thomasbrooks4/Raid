@@ -337,7 +337,23 @@ public abstract class Character : MonoBehaviour {
         return false;
 	}
 
-	public Vector2 GetTransfromPostionVector2() {
+    public bool IsFacingDiagonal() {
+        return currentDirection.x != 0 && currentDirection.y != 0;
+    }
+
+    public bool IsAdjacentAllyBlocking() {
+        List<GridTile> surroundingTiles = currentTile.Grid.GetSurroundingTiles(currentTile);
+
+        foreach (GridTile gridTile in surroundingTiles) {
+            if (gridTile.Character != null && !IsEnemy(gridTile.Character)) {
+                // TODO Fix this poop up
+            }
+        }
+
+        return false;
+    }
+
+    public Vector2 GetTransfromPostionVector2() {
 		return new Vector2(transform.position.x, transform.position.y);
 	}
 
